@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de connaissances Windows - Débutants</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .progress-bar {
+            background: #f0f0f0;
+            height: 8px;
+            position: relative;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #00d4ff, #0078d4);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #0078d4;
+            transition: all 0.3s ease;
+        }
+        
+        .question-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .question-number {
+            background: #0078d4;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .option:hover {
+            border-color: #0078d4;
+            background: #f0f8ff;
+        }
+        
+        .option-letter {
+            background: #e0e0e0;
+            color: #555;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .option.correct .option-letter {
+            background: #28a745;
+            color: white;
+        }
+        
+        .option.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .option.incorrect .option-letter {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-left: 4px solid #0078d4;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .explanation.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .explanation-title {
+            font-weight: bold;
+            color: #0078d4;
+            margin-bottom: 8px;
+        }
+        
+        .explanation-text {
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .score-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .score-section h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .score-number {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .reset-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .reset-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+            .option {
+                cursor: default;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🪟 Test de connaissances Windows</h1>
+            <p>Quiz pour débutants - 30 questions</p>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+        
+        <div class="content" id="quizContent"></div>
+        
+        <div class="score-section" id="scoreSection" style="display: none;">
+            <h2>🎉 Quiz terminé !</h2>
+            <div class="score-number" id="scoreDisplay">0/30</div>
+            <p id="scoreMessage"></p>
+            <button class="reset-btn" onclick="resetQuiz()">Recommencer le quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Quel est le rôle principal du système d'exploitation Windows ?",
+                options: [
+                    "Exécuter uniquement les jeux vidéo",
+                    "Gérer le matériel et les logiciels de l'ordinateur",
+                    "Servir uniquement à naviguer sur Internet",
+                    "Remplacer les mises à jour de l'antivirus"
+                ],
+                correct: 1,
+                explanation: "Windows est un système d'exploitation qui gère à la fois le matériel (processeur, mémoire, périphériques) et les logiciels installés."
+            },
+            {
+                question: "Comment s'appelle le bouton principal en bas à gauche qui permet d'accéder aux programmes et paramètres ?",
+                options: ["Le bouton Démarrer", "Le bouton Explorer", "Le bouton Panneau", "Le bouton Bureau"],
+                correct: 0,
+                explanation: "Le bouton Démarrer est la porte d'entrée pour accéder aux logiciels, paramètres, fichiers et options d'arrêt/reprise de l'ordinateur."
+            },
+            {
+                question: "Quel raccourci clavier permet de copier un élément sous Windows ?",
+                options: ["Ctrl + C", "Ctrl + V", "Ctrl + X", "Ctrl + Z"],
+                correct: 0,
+                explanation: "Le raccourci Ctrl + C copie l'élément sélectionné, tandis que Ctrl + V le colle et Ctrl + X le coupe."
+            },
+            {
+                question: "Quel est le rôle de la Corbeille dans Windows ?",
+                options: [
+                    "Supprimer définitivement les fichiers",
+                    "Stocker temporairement les fichiers supprimés",
+                    "Sauvegarder les fichiers importants",
+                    "Nettoyer automatiquement le disque dur"
+                ],
+                correct: 1,
+                explanation: "La Corbeille conserve les fichiers supprimés temporairement, permettant de les restaurer en cas d'erreur."
+            },
+            {
+                question: "Quel est le nom du gestionnaire de fichiers de Windows ?",
+                options: ["Finder", "Explorateur de fichiers", "Terminal", "Panneau de configuration"],
+                correct: 1,
+                explanation: "L'Explorateur de fichiers permet de parcourir, organiser et gérer les dossiers et fichiers du système."
+            },
+            {
+                question: "Quelle combinaison de touches permet de sélectionner tout le contenu d'un document ?",
+                options: ["Ctrl + C", "Ctrl + A", "Ctrl + S", "Ctrl + P"],
+                correct: 1,
+                explanation: "Ctrl + A sélectionne tout le contenu d'un fichier ou dossier."
+            },
+            {
+                question: "Que signifie l'abréviation « PC » utilisée avec Windows ?",
+                options: ["Portable Computer", "Personal Computer", "Private Console", "Program Center"],
+                correct: 1,
+                explanation: "PC signifie « Personal Computer » (ordinateur personnel)."
+            },
+            {
+                question: "Quel menu permet d'accéder rapidement aux paramètres système avancés comme le Gestionnaire de périphériques ?",
+                options: [
+                    "Clic droit sur le Bureau",
+                    "Menu Démarrer > Paramètres",
+                    "Clic droit sur le bouton Démarrer",
+                    "Barre des tâches > Paramètres"
+                ],
+                correct: 2,
+                explanation: "Un clic droit sur le bouton Démarrer ouvre un menu avec des options comme le Gestionnaire de périphériques et le Gestionnaire des tâches."
+            },
+            {
+                question: "Quel est le rôle du Gestionnaire des tâches ?",
+                options: [
+                    "Organiser les fichiers",
+                    "Surveiller et gérer les programmes en cours d'exécution",
+                    "Créer des documents Word",
+                    "Supprimer les virus"
+                ],
+                correct: 1,
+                explanation: "Le Gestionnaire des tâches permet de voir les programmes actifs, leur consommation de ressources et de forcer leur fermeture si nécessaire."
+            },
+            {
+                question: "Quelle extension correspond généralement à un fichier exécutable dans Windows ?",
+                options: [".exe", ".jpg", ".txt", ".docx"],
+                correct: 0,
+                explanation: "Les fichiers portant l'extension .exe sont des programmes exécutables sous Windows."
+            },
+            {
+                question: "Que fait le raccourci Ctrl + Z ?",
+                options: [
+                    "Annuler la dernière action",
+                    "Coller un élément",
+                    "Supprimer un fichier",
+                    "Redémarrer l'ordinateur"
+                ],
+                correct: 0,
+                explanation: "Ctrl + Z annule la dernière action effectuée (ex. suppression d'un mot, déplacement d'un fichier)."
+            },
+            {
+                question: "Quel périphérique est nécessaire pour afficher l'interface Windows ?",
+                options: ["Une souris", "Un écran", "Un clavier", "Une imprimante"],
+                correct: 1,
+                explanation: "Un écran est indispensable pour afficher l'interface graphique de Windows."
+            },
+            {
+                question: "Quel est l'outil de Windows permettant de capturer une partie de l'écran ?",
+                options: ["Bloc-notes", "Outil Capture d'écran", "Paint", "WordPad"],
+                correct: 1,
+                explanation: "L'outil Capture d'écran permet de sélectionner et enregistrer une partie ou tout l'écran."
+            },
+            {
+                question: "Quelle option permet d'éteindre correctement un PC Windows ?",
+                options: [
+                    "Débrancher le câble d'alimentation",
+                    "Maintenir le bouton de démarrage",
+                    "Menu Démarrer > Arrêter",
+                    "Fermer toutes les fenêtres"
+                ],
+                correct: 2,
+                explanation: "Il est recommandé d'éteindre un ordinateur via le menu Démarrer > Arrêter pour éviter des problèmes système."
+            },
+            {
+                question: "Quel programme de Windows permet de naviguer sur Internet par défaut (Windows 10) ?",
+                options: ["Chrome", "Firefox", "Edge", "Safari"],
+                correct: 2,
+                explanation: "Microsoft Edge est le navigateur installé par défaut sur Windows 10 et Windows 11."
+            },
+            {
+                question: "Quelle commande clavier permet de basculer entre les fenêtres ouvertes ?",
+                options: ["Alt + Tab", "Ctrl + P", "Ctrl + Alt + Suppr", "Maj + Entrée"],
+                correct: 0,
+                explanation: "Alt + Tab permet de passer rapidement d'une fenêtre ouverte à une autre."
+            },
+            {
+                question: "Quel logiciel de Windows est utilisé pour écrire des textes simples sans mise en page avancée ?",
+                options: ["WordPad", "Bloc-notes", "Word", "Excel"],
+                correct: 1,
+                explanation: "Le Bloc-notes est un éditeur de texte basique qui ne gère pas la mise en forme."
+            },
+            {
+                question: "Quelle extension correspond à un fichier texte créé avec le Bloc-notes ?",
+                options: [".docx", ".txt", ".pdf", ".xls"],
+                correct: 1,
+                explanation: "Les fichiers créés avec le Bloc-notes sont enregistrés avec l'extension .txt."
+            },
+            {
+                question: "Quel est l'icône représentant généralement le dossier principal de l'utilisateur ?",
+                options: ["Corbeille", "Ce PC", "Dossier Documents", "Explorateur"],
+                correct: 2,
+                explanation: "Le dossier Documents est utilisé par défaut pour stocker les fichiers personnels de l'utilisateur."
+            },
+            {
+                question: "Que fait la combinaison Ctrl + Alt + Suppr ?",
+                options: [
+                    "Éteint l'ordinateur",
+                    "Ouvre un menu de sécurité avec le Gestionnaire des tâches",
+                    "Supprime définitivement un fichier",
+                    "Lance Windows Update"
+                ],
+                correct: 1,
+                explanation: "Ctrl + Alt + Suppr ouvre un menu qui permet d'accéder au Gestionnaire des tâches, de verrouiller la session, de se déconnecter, etc."
+            },
+            {
+                question: "Quelle est la zone en bas de l'écran où l'on peut voir les applications ouvertes ?",
+                options: ["Le Bureau", "La Barre des tâches", "Le Gestionnaire des fichiers", "Le Panneau de configuration"],
+                correct: 1,
+                explanation: "La Barre des tâches affiche les applications ouvertes, l'heure et permet d'épingler des programmes."
+            },
+            {
+                question: "Comment appelle-t-on un petit logiciel utilitaire intégré dans Windows (calculatrice, bloc-notes...) ?",
+                options: ["Widget", "Accessoire Windows", "Extension", "Pack Office"],
+                correct: 1,
+                explanation: "Les petits logiciels comme la calculatrice ou le bloc-notes sont appelés Accessoires Windows."
+            },
+            {
+                question: "Comment afficher rapidement le Bureau si plusieurs fenêtres sont ouvertes ?",
+                options: ["Alt + F4", "Touche Windows + D", "Ctrl + D", "F11"],
+                correct: 1,
+                explanation: "Le raccourci Windows + D minimise toutes les fenêtres pour afficher le Bureau."
+            },
+            {
+                question: "Quelle option permet de modifier la résolution de l'écran ?",
+                options: ["Gestionnaire des tâches", "Paramètres d'affichage", "Explorateur de fichiers", "Windows Defender"],
+                correct: 1,
+                explanation: "La résolution d'écran se modifie dans les Paramètres d'affichage."
+            },
+            {
+                question: "Quel outil de Windows permet de vérifier et d'installer les mises à jour système ?",
+                options: ["Microsoft Store", "Windows Update", "Gestionnaire de périphériques", "Explorateur de fichiers"],
+                correct: 1,
+                explanation: "Windows Update installe automatiquement les mises à jour de sécurité et de fonctionnalités du système."
+            },
+            {
+                question: "Quelle extension correspond à une image au format standard sous Windows ?",
+                options: [".exe", ".jpg", ".dll", ".bat"],
+                correct: 1,
+                explanation: "Les images les plus courantes sous Windows utilisent l'extension .jpg ou .png."
+            },
+            {
+                question: "Quel programme permet d'écrire et de modifier des documents avec mise en page ?",
+                options: ["WordPad", "Bloc-notes", "Paint", "Edge"],
+                correct: 0,
+                explanation: "WordPad permet de créer des documents avec un minimum de mise en page (gras, italique, images)."
+            },
+            {
+                question: "Que fait le raccourci clavier Ctrl + S dans Windows ?",
+                options: [
+                    "Supprimer le fichier",
+                    "Sauvegarder le document en cours",
+                    "Sélectionner tout le contenu",
+                    "Fermer la fenêtre"
+                ],
+                correct: 1,
+                explanation: "Ctrl + S enregistre le fichier actif dans la plupart des logiciels Windows."
+            },
+            {
+                question: "Quel est le rôle principal de l'antivirus intégré à Windows (Windows Defender) ?",
+                options: [
+                    "Améliorer la vitesse du PC",
+                    "Bloquer et supprimer les logiciels malveillants",
+                    "Nettoyer les fichiers temporaires",
+                    "Installer des mises à jour Windows"
+                ],
+                correct: 1,
+                explanation: "Windows Defender protège l'ordinateur contre les virus, chevaux de Troie et autres logiciels malveillants."
+            },
+            {
+                question: "Quelle combinaison permet de verrouiller rapidement une session Windows ?",
+                options: ["Ctrl + L", "Windows + L", "Alt + L", "Shift + L"],
+                correct: 1,
+                explanation: "Le raccourci Windows + L verrouille immédiatement la session en cours."
+            }
+        ];
+
+        let score = 0;
+        let answeredQuestions = 0;
+
+        function initQuiz() {
+            const container = document.getElementById('quizContent');
+            quizData.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.innerHTML = `
+                    <div class="question-header">
+                        <span class="question-number">Question ${index + 1}</span>
+                    </div>
+                    <div class="question-text">${q.question}</div>
+                    <div class="options">
+                        ${q.options.map((opt, i) => `
+                            <div class="option" onclick="selectAnswer(${index}, ${i})">
+                                <span class="option-letter">${String.fromCharCode(65 + i)}</span>
+                                <span>${opt}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="explanation" id="explanation-${index}">
+                        <div class="explanation-title">✓ Explication :</div>
+                        <div class="explanation-text">${q.explanation}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function selectAnswer(questionIndex, optionIndex) {
+            const card = document.querySelectorAll('.question-card')[questionIndex];
+            const options = card.querySelectorAll('.option');
+            const explanation = document.getElementById(`explanation-${questionIndex}`);
+            
+            if (card.dataset.answered) return;
+            
+            card.dataset.answered = 'true';
+            answeredQuestions++;
+            
+            options.forEach((opt, i) => {
+                opt.style.pointerEvents = 'none';
+                if (i === quizData[questionIndex].correct) {
+                    opt.classList.add('correct');
+                }
+                if (i === optionIndex && i !== quizData[questionIndex].correct) {
+                    opt.classList.add('incorrect');
+                }
+            });
+            
+            if (optionIndex === quizData[questionIndex].correct) {
+                score++;
+            }
+            
+            explanation.classList.add('show');
+            updateProgress();
+            
+            if (answeredQuestions === quizData.length) {
+                showScore();
+            }
+        }
+
+        function updateProgress() {
+            const progress = (answeredQuestions / quizData.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function showScore() {
+            setTimeout(() => {
+                document.getElementById('scoreDisplay').textContent = `${score}/${quizData.length}`;
+                const percentage = (score / quizData.length) * 100;
+                let message = '';
+                
+                if (percentage >= 90) message = "Excellent ! Vous maîtrisez parfaitement Windows ! 🌟";
+                else if (percentage >= 75) message = "Très bien ! Vous avez de bonnes connaissances ! 👍";
+                else if (percentage >= 60) message = "Bien ! Continuez à apprendre ! 📚";
+                else message = "Continuez vos efforts, vous allez progresser ! 💪";
+                
+                document.getElementById('scoreMessage').textContent = message;
+                document.getElementById('scoreSection').style.display = 'block';
+                document.getElementById('scoreSection').scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+
+        function resetQuiz() {
+            score = 0;
+            answeredQuestions = 0;
+            document.getElementById('quizContent').innerHTML = '';
+            document.getElementById('scoreSection').style.display = 'none';
+            document.getElementById('progressBar').style.width = '0%';
+            initQuiz();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

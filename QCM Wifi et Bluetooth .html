@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QCM - WiFi & Bluetooth</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;700;800&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --bg-primary: #0a0e27;
+      --bg-secondary: #1a2347;
+      --bg-card: #2a3458;
+      --accent-cyan: #00d4ff;
+      --accent-purple: #7c3aed;
+      --text-primary: #e8edf5;
+      --text-muted: #9aa5c1;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+    
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f3a 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+      animation: rotate 30s linear infinite;
+      pointer-events: none;
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      animation: slideDown 0.6s ease-out;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .title-accent {
+      height: 6px;
+      width: 120px;
+      background: linear-gradient(90deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+      margin: 0 auto 1.5rem;
+      border-radius: 3px;
+    }
+    
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+      letter-spacing: -1px;
+    }
+    
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      font-weight: 400;
+    }
+    
+    .progress-bar {
+      background: var(--bg-secondary);
+      height: 12px;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(0, 212, 255, 0.2);
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 6px;
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+    }
+    
+    .question-card {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(0, 212, 255, 0.15);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      animation: fadeInUp 0.5s ease-out forwards;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .question-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .question-number {
+      background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+      color: var(--bg-primary);
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      min-width: 90px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+    }
+    
+    .question-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.6;
+      flex: 1;
+    }
+    
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .option {
+      background: var(--bg-card);
+      border: 2px solid rgba(0, 212, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .option::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(0, 212, 255, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .option:hover::before {
+      opacity: 1;
+    }
+    
+    .option:hover {
+      border-color: var(--accent-cyan);
+      transform: translateX(4px);
+      box-shadow: 0 4px 16px rgba(0, 212, 255, 0.2);
+    }
+    
+    .option-letter {
+      background: var(--bg-secondary);
+      color: var(--accent-cyan);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+    
+    .option:hover .option-letter {
+      background: var(--accent-cyan);
+      color: var(--bg-primary);
+      transform: scale(1.1);
+    }
+    
+    .option-text {
+      flex: 1;
+      font-size: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .option.selected {
+      border-color: var(--accent-purple);
+      background: rgba(124, 58, 237, 0.15);
+    }
+    
+    .option.selected .option-letter {
+      background: var(--accent-purple);
+      color: white;
+    }
+    
+    .option.correct {
+      border-color: var(--success);
+      background: rgba(16, 185, 129, 0.15);
+      pointer-events: none;
+    }
+    
+    .option.correct .option-letter {
+      background: var(--success);
+      color: white;
+    }
+    
+    .option.incorrect {
+      border-color: var(--error);
+      background: rgba(239, 68, 68, 0.15);
+      pointer-events: none;
+    }
+    
+    .option.incorrect .option-letter {
+      background: var(--error);
+      color: white;
+    }
+    
+    .option.disabled {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+    
+    .explanation {
+      background: var(--bg-card);
+      border-left: 4px solid var(--accent-cyan);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-top: 1.5rem;
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .explanation.show {
+      display: block;
+    }
+    
+    .explanation-title {
+      font-weight: 600;
+      color: var(--accent-cyan);
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .explanation-text {
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+    
+    .results {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 3rem;
+      text-align: center;
+      border: 1px solid rgba(0, 212, 255, 0.15);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      display: none;
+      animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    .results.show {
+      display: block;
+    }
+    
+    .results-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .score-display {
+      font-size: 5rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      margin: 2rem 0;
+      background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    
+    .score-details {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+    }
+    
+    .score-item {
+      text-align: center;
+    }
+    
+    .score-label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+    
+    .score-value {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .score-value.correct {
+      color: var(--success);
+    }
+    
+    .score-value.incorrect {
+      color: var(--error);
+    }
+    
+    .restart-btn {
+      background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+      color: white;
+      border: none;
+      padding: 1rem 3rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 2rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Outfit', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+    }
+    
+    .restart-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0, 212, 255, 0.4);
+    }
+    
+    .restart-btn:active {
+      transform: translateY(0);
+    }
+    
+    .score-message {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      margin: 1rem 0;
+      font-style: italic;
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem 0.5rem;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .question-card {
+        padding: 1.5rem;
+      }
+      
+      .question-text {
+        font-size: 1.1rem;
+      }
+      
+      .score-display {
+        font-size: 3.5rem;
+      }
+      
+      .score-details {
+        gap: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title-accent"></div>
+      <h1>QCM WiFi & Bluetooth</h1>
+      <p class="subtitle">Testez vos connaissances sur les technologies sans fil</p>
+    </header>
+    
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    
+    <div id="quizContainer"></div>
+    
+    <div class="results" id="results">
+      <h2 class="results-title">Quiz terminé !</h2>
+      <div class="score-display" id="scoreDisplay"></div>
+      <p class="score-message" id="scoreMessage"></p>
+      <div class="score-details">
+        <div class="score-item">
+          <div class="score-label">Correctes</div>
+          <div class="score-value correct" id="correctCount"></div>
+        </div>
+        <div class="score-item">
+          <div class="score-label">Incorrectes</div>
+          <div class="score-value incorrect" id="incorrectCount"></div>
+        </div>
+      </div>
+      <button class="restart-btn" onclick="restartQuiz()">Recommencer</button>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "Quelle est la principale fonction du WiFi ?",
+        options: [
+          "Connecter des périphériques entre eux directement",
+          "Fournir un accès Internet sans fil",
+          "Économiser la batterie des appareils",
+          "Transférer uniquement des fichiers audio"
+        ],
+        correct: 1,
+        explanation: "Le WiFi utilise des ondes radio pour transmettre des données entre un routeur et des appareils, permettant principalement l'accès Internet sans fil."
+      },
+      {
+        question: "Sur quelles bandes de fréquences fonctionne le WiFi ?",
+        options: [
+          "Uniquement 2,4 GHz",
+          "2,4 GHz et 5 GHz",
+          "900 MHz et 1,8 GHz",
+          "5 GHz uniquement"
+        ],
+        correct: 1,
+        explanation: "Le WiFi utilise principalement deux bandes de fréquences : 2,4 GHz (portée étendue, vitesse modérée) et 5 GHz (vitesse élevée, portée réduite). Le WiFi 6E ajoute aussi la bande 6 GHz."
+      },
+      {
+        question: "Quel est le débit maximal approximatif du WiFi 6 ?",
+        options: [
+          "100 Mbps",
+          "1 Gbps",
+          "9+ Gbps",
+          "50 Mbps"
+        ],
+        correct: 2,
+        explanation: "Les normes WiFi récentes (WiFi 5, 6, 6E) offrent des débits allant de 1 à plus de 9 Gbps selon la norme et les conditions."
+      },
+      {
+        question: "Quelle est la portée typique du WiFi en intérieur ?",
+        options: [
+          "10-20 mètres",
+          "50-100 mètres",
+          "200-300 mètres",
+          "5-10 mètres"
+        ],
+        correct: 1,
+        explanation: "Le WiFi a généralement une portée de 50 à 100 mètres en intérieur, selon les obstacles et la puissance du signal."
+      },
+      {
+        question: "Le Bluetooth crée quel type de connexion ?",
+        options: [
+          "Connexion via routeur obligatoire",
+          "Connexion point-à-point courte distance",
+          "Connexion satellite",
+          "Connexion filaire virtuelle"
+        ],
+        correct: 1,
+        explanation: "Le Bluetooth crée des connexions point-à-point directes entre appareils sans nécessiter d'infrastructure réseau comme un routeur."
+      },
+      {
+        question: "Sur quelle fréquence fonctionne le Bluetooth ?",
+        options: [
+          "5 GHz",
+          "900 MHz",
+          "2,4 GHz",
+          "6 GHz"
+        ],
+        correct: 2,
+        explanation: "Le Bluetooth fonctionne sur la bande 2,4 GHz avec un système de saut de fréquence sur 79 canaux pour éviter les interférences."
+      },
+      {
+        question: "Quel est le débit maximal du Bluetooth Classic ?",
+        options: [
+          "3 Mbps",
+          "100 Mbps",
+          "1 Gbps",
+          "10 Mbps"
+        ],
+        correct: 0,
+        explanation: "Le Bluetooth Classic offre un débit maximal d'environ 3 Mbps, ce qui est suffisant pour l'audio mais inadapté pour la vidéo haute définition."
+      },
+      {
+        question: "Quelle est la portée maximale typique du Bluetooth ?",
+        options: [
+          "100 mètres",
+          "10-30 mètres",
+          "200 mètres",
+          "5 mètres"
+        ],
+        correct: 1,
+        explanation: "Le Bluetooth a généralement une portée de 10 à 30 mètres maximum, bien que certaines versions puissent atteindre plus loin dans des conditions optimales."
+      },
+      {
+        question: "Que signifie BLE dans le contexte du Bluetooth ?",
+        options: [
+          "Bluetooth Large Extension",
+          "Bluetooth Low Energy",
+          "Bluetooth Link Enhanced",
+          "Bluetooth Latest Edition"
+        ],
+        correct: 1,
+        explanation: "BLE signifie Bluetooth Low Energy, une version du Bluetooth optimisée pour une très faible consommation d'énergie, idéale pour les objets connectés et capteurs IoT."
+      },
+      {
+        question: "Pour quel usage le WiFi est-il particulièrement adapté ?",
+        options: [
+          "Connecter des écouteurs sans fil",
+          "Streaming vidéo et navigation Internet",
+          "Tracker de fitness",
+          "Souris sans fil uniquement"
+        ],
+        correct: 1,
+        explanation: "Le WiFi est parfaitement adapté pour le streaming vidéo et la navigation Internet grâce à son débit élevé et sa connexion au réseau Internet."
+      },
+      {
+        question: "Pour quel usage le Bluetooth est-il le plus approprié ?",
+        options: [
+          "Téléchargement de films",
+          "Jeux en ligne multijoueurs",
+          "Audio sans fil (écouteurs, enceintes)",
+          "Connexion Internet principale"
+        ],
+        correct: 2,
+        explanation: "Le Bluetooth est idéal pour l'audio sans fil (écouteurs, enceintes, casques) car il offre un bon débit pour l'audio tout en consommant peu d'énergie."
+      },
+      {
+        question: "Combien d'appareils peuvent être connectés simultanément en Bluetooth classique ?",
+        options: [
+          "Illimité",
+          "7 maximum",
+          "100 maximum",
+          "2 seulement"
+        ],
+        correct: 1,
+        explanation: "Le Bluetooth Classic permet de connecter jusqu'à 7 appareils simultanément à un appareil maître (piconet)."
+      },
+      {
+        question: "Quel est un avantage majeur du WiFi par rapport au Bluetooth ?",
+        options: [
+          "Consommation énergétique réduite",
+          "Débit de données beaucoup plus élevé",
+          "Connexion plus simple",
+          "Portée plus courte"
+        ],
+        correct: 1,
+        explanation: "Le WiFi offre un débit de données beaucoup plus élevé (jusqu'à plusieurs Gbps) comparé au Bluetooth (3 Mbps max pour Classic)."
+      },
+      {
+        question: "Quel est un avantage du Bluetooth par rapport au WiFi ?",
+        options: [
+          "Débit plus élevé",
+          "Portée plus grande",
+          "Faible consommation d'énergie",
+          "Nécessite un routeur"
+        ],
+        correct: 2,
+        explanation: "Le Bluetooth, particulièrement en version BLE, consomme très peu d'énergie, ce qui prolonge l'autonomie de la batterie des appareils."
+      },
+      {
+        question: "Quel inconvénient affecte principalement le WiFi ?",
+        options: [
+          "Portée trop limitée",
+          "Consommation énergétique élevée",
+          "Débit trop faible",
+          "Impossible de connecter plusieurs appareils"
+        ],
+        correct: 1,
+        explanation: "Le WiFi consomme beaucoup d'énergie, ce qui peut avoir un impact significatif sur l'autonomie de la batterie des appareils mobiles."
+      },
+      {
+        question: "Quel est un inconvénient majeur du Bluetooth ?",
+        options: [
+          "Configuration très complexe",
+          "Consommation énergétique très élevée",
+          "Portée limitée (10-30m)",
+          "Nécessite toujours un routeur"
+        ],
+        correct: 2,
+        explanation: "La portée limitée du Bluetooth (généralement 10-30 mètres) est l'un de ses principaux inconvénients par rapport au WiFi."
+      },
+      {
+        question: "Quelle infrastructure le WiFi nécessite-t-il ?",
+        options: [
+          "Connexion directe entre appareils",
+          "Routeur ou point d'accès",
+          "Satellite uniquement",
+          "Aucune infrastructure"
+        ],
+        correct: 1,
+        explanation: "Le WiFi nécessite un routeur ou un point d'accès pour créer le réseau sans fil et généralement pour fournir l'accès Internet."
+      },
+      {
+        question: "Le Bluetooth nécessite-t-il un routeur pour fonctionner ?",
+        options: [
+          "Oui, toujours",
+          "Non, connexion directe entre appareils",
+          "Seulement pour Internet",
+          "Oui, pour l'audio"
+        ],
+        correct: 1,
+        explanation: "Le Bluetooth fonctionne en connexion directe entre appareils sans nécessiter de routeur ou d'infrastructure réseau."
+      },
+      {
+        question: "Quelle norme IEEE définit le WiFi ?",
+        options: [
+          "IEEE 802.15",
+          "IEEE 802.3",
+          "IEEE 802.11",
+          "IEEE 802.16"
+        ],
+        correct: 2,
+        explanation: "Le WiFi est défini par la norme IEEE 802.11 et ses variantes (802.11a/b/g/n/ac/ax)."
+      },
+      {
+        question: "Quel appareil utilise typiquement le Bluetooth ?",
+        options: [
+          "Serveur web",
+          "Écouteurs sans fil",
+          "Box Internet",
+          "Routeur principal"
+        ],
+        correct: 1,
+        explanation: "Les écouteurs sans fil sont des utilisateurs typiques du Bluetooth pour la transmission audio sans fil avec faible consommation."
+      },
+      {
+        question: "Pour jouer en ligne, quelle technologie est préférable ?",
+        options: [
+          "Bluetooth uniquement",
+          "WiFi pour sa faible latence",
+          "Aucune des deux",
+          "Les deux sont équivalentes"
+        ],
+        correct: 1,
+        explanation: "Le WiFi est préférable pour les jeux en ligne car il offre un débit élevé, une faible latence et une connexion Internet stable."
+      },
+      {
+        question: "Quelle version du Bluetooth est optimisée pour l'IoT ?",
+        options: [
+          "Bluetooth Classic",
+          "Bluetooth LE (Low Energy)",
+          "Bluetooth Audio",
+          "Bluetooth HD"
+        ],
+        correct: 1,
+        explanation: "Bluetooth LE (Low Energy) est spécifiquement conçu pour les objets connectés IoT car il consomme très peu d'énergie tout en maintenant une connexion."
+      },
+      {
+        question: "Combien de canaux utilise le Bluetooth pour le saut de fréquence ?",
+        options: [
+          "12 canaux",
+          "50 canaux",
+          "79 canaux",
+          "100 canaux"
+        ],
+        correct: 2,
+        explanation: "Le Bluetooth utilise 79 canaux pour son système de saut de fréquence (frequency hopping) afin d'éviter les interférences."
+      },
+      {
+        question: "La bande 2,4 GHz du WiFi peut être saturée par :",
+        options: [
+          "Trop de réseaux WiFi voisins",
+          "Les satellites",
+          "Le réseau 5G",
+          "Les câbles Ethernet"
+        ],
+        correct: 0,
+        explanation: "La bande 2,4 GHz est souvent saturée car elle est utilisée par de nombreux réseaux WiFi, ainsi que par d'autres appareils comme les micro-ondes."
+      },
+      {
+        question: "Quel type d'appareil bénéficie le plus du WiFi 5 GHz ?",
+        options: [
+          "Appareil très éloigné du routeur",
+          "Appareil nécessitant un débit élevé à proximité",
+          "Capteur de température",
+          "Montre connectée"
+        ],
+        correct: 1,
+        explanation: "Le WiFi 5 GHz offre une vitesse élevée mais une portée réduite, il est donc idéal pour les appareils proches du routeur nécessitant beaucoup de bande passante."
+      },
+      {
+        question: "Pour connecter une souris sans fil, quelle technologie est généralement utilisée ?",
+        options: [
+          "WiFi exclusivement",
+          "Bluetooth ou dongle RF propriétaire",
+          "NFC uniquement",
+          "Infrarouge"
+        ],
+        correct: 1,
+        explanation: "Les souris sans fil utilisent généralement le Bluetooth ou un dongle RF propriétaire pour une connexion à faible latence et faible consommation."
+      },
+      {
+        question: "Le WiFi et le Bluetooth peuvent-ils coexister sur un même appareil ?",
+        options: [
+          "Non, jamais",
+          "Oui, ils sont présents dans la plupart des appareils modernes",
+          "Seulement sur les ordinateurs",
+          "Seulement sur les smartphones"
+        ],
+        correct: 1,
+        explanation: "Le WiFi et le Bluetooth coexistent dans la plupart des appareils modernes (smartphones, tablettes, ordinateurs) car ils répondent à des besoins différents et complémentaires."
+      },
+      {
+        question: "Quelle est la priorité du Bluetooth LE ?",
+        options: [
+          "Vitesse maximale",
+          "Portée maximale",
+          "Économie d'énergie",
+          "Nombre de connexions"
+        ],
+        correct: 2,
+        explanation: "Bluetooth LE (Low Energy) privilégie l'économie d'énergie avant tout, permettant aux appareils de fonctionner pendant des mois voire des années sur une pile."
+      },
+      {
+        question: "Pour un réseau d'entreprise, quelle technologie est essentielle ?",
+        options: [
+          "Bluetooth uniquement",
+          "WiFi pour connecter de nombreux appareils à Internet",
+          "NFC",
+          "Infrarouge"
+        ],
+        correct: 1,
+        explanation: "Le WiFi est essentiel pour les réseaux d'entreprise car il permet de connecter de nombreux appareils simultanément à Internet et au réseau local avec un débit élevé."
+      },
+      {
+        question: "Quelle affirmation est correcte ?",
+        options: [
+          "Le WiFi remplace complètement le Bluetooth",
+          "Le Bluetooth remplace complètement le WiFi",
+          "WiFi et Bluetooth sont complémentaires",
+          "WiFi et Bluetooth sont identiques"
+        ],
+        correct: 2,
+        explanation: "WiFi et Bluetooth sont des technologies complémentaires qui coexistent dans la plupart des appareils : le WiFi pour Internet et données volumineuses, le Bluetooth pour les périphériques personnels à faible consommation."
+      }
+    ];
+
+    let currentAnswers = new Array(questions.length).fill(null);
+    let quizCompleted = false;
+
+    function initQuiz() {
+      const container = document.getElementById('quizContainer');
+      container.innerHTML = '';
+      
+      questions.forEach((q, index) => {
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.style.animationDelay = `${index * 0.05}s`;
+        
+        card.innerHTML = `
+          <div class="question-header">
+            <div class="question-number">Q${index + 1}/30</div>
+            <div class="question-text">${q.question}</div>
+          </div>
+          <div class="options">
+            ${q.options.map((option, optIndex) => `
+              <div class="option" onclick="selectAnswer(${index}, ${optIndex})" data-question="${index}" data-option="${optIndex}">
+                <div class="option-letter">${String.fromCharCode(65 + optIndex)}</div>
+                <div class="option-text">${option}</div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="explanation" id="explanation-${index}">
+            <div class="explanation-title">💡 Explication</div>
+            <div class="explanation-text">${q.explanation}</div>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+      
+      updateProgress();
+    }
+
+    function selectAnswer(questionIndex, optionIndex) {
+      if (quizCompleted) return;
+      
+      const options = document.querySelectorAll(`[data-question="${questionIndex}"]`);
+      options.forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      
+      const selectedOption = document.querySelector(`[data-question="${questionIndex}"][data-option="${optionIndex}"]`);
+      selectedOption.classList.add('selected');
+      
+      currentAnswers[questionIndex] = optionIndex;
+      updateProgress();
+      
+      checkIfComplete();
+    }
+
+    function updateProgress() {
+      const answered = currentAnswers.filter(a => a !== null).length;
+      const percentage = (answered / questions.length) * 100;
+      document.getElementById('progressFill').style.width = percentage + '%';
+    }
+
+    function checkIfComplete() {
+      const allAnswered = currentAnswers.every(a => a !== null);
+      
+      if (allAnswered && !quizCompleted) {
+        quizCompleted = true;
+        setTimeout(showResults, 500);
+      }
+    }
+
+    function showResults() {
+      let correct = 0;
+      
+      questions.forEach((q, index) => {
+        const options = document.querySelectorAll(`[data-question="${index}"]`);
+        const userAnswer = currentAnswers[index];
+        
+        options.forEach((opt, optIndex) => {
+          opt.classList.add('disabled');
+          
+          if (optIndex === q.correct) {
+            opt.classList.add('correct');
+          } else if (optIndex === userAnswer && userAnswer !== q.correct) {
+            opt.classList.add('incorrect');
+          }
+        });
+        
+        document.getElementById(`explanation-${index}`).classList.add('show');
+        
+        if (userAnswer === q.correct) {
+          correct++;
+        }
+      });
+      
+      const percentage = Math.round((correct / questions.length) * 100);
+      
+      document.getElementById('scoreDisplay').textContent = percentage + '%';
+      document.getElementById('correctCount').textContent = correct;
+      document.getElementById('incorrectCount').textContent = questions.length - correct;
+      
+      let message = '';
+      if (percentage >= 90) {
+        message = "Excellent ! Vous maîtrisez parfaitement le sujet ! 🎉";
+      } else if (percentage >= 75) {
+        message = "Très bien ! Vous avez de solides connaissances ! 👏";
+      } else if (percentage >= 60) {
+        message = "Bien ! Quelques révisions vous permettront de progresser ! 📚";
+      } else if (percentage >= 40) {
+        message = "Pas mal, mais il reste du travail ! 💪";
+      } else {
+        message = "Il est recommandé de revoir la présentation ! 📖";
+      }
+      
+      document.getElementById('scoreMessage').textContent = message;
+      
+      setTimeout(() => {
+        document.getElementById('results').classList.add('show');
+        document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 1000);
+    }
+
+    function restartQuiz() {
+      currentAnswers = new Array(questions.length).fill(null);
+      quizCompleted = false;
+      document.getElementById('results').classList.remove('show');
+      initQuiz();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    initQuiz();
+  </script>
+</body>
+</html>

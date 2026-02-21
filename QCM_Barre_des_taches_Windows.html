@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCM - La barre des tâches Windows</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0078D4;
+            --primary-dark: #005A9E;
+            --secondary: #00B7C3;
+            --success: #10B981;
+            --error: #EF4444;
+            --warning: #F59E0B;
+            --bg-main: #0A0E27;
+            --bg-card: #1A1F3A;
+            --bg-hover: #252B4A;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --border: #2D3654;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(at 20% 10%, rgba(0, 120, 212, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 90%, rgba(0, 183, 195, 0.1) 0px, transparent 50%);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0, 120, 212, 0.1) 100%);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .score-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+        }
+
+        .score-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .score-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .score-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .score-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-hover);
+            border-radius: 1rem;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(0, 120, 212, 0.5);
+        }
+
+        .question-card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .question-number {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            font-family: 'Space Mono', monospace;
+            flex-shrink: 0;
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(0, 120, 212, 0.1), rgba(0, 183, 195, 0.1));
+            transition: width 0.3s ease;
+            z-index: 0;
+        }
+
+        .option:hover::before {
+            width: 100%;
+        }
+
+        .option:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .option-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .option-letter {
+            background: var(--bg-hover);
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .option:hover .option-letter {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .option.selected {
+            border-color: var(--primary);
+            background: rgba(0, 120, 212, 0.1);
+        }
+
+        .option.selected .option-letter {
+            background: var(--primary);
+            color: white;
+        }
+
+        .option.correct {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+            animation: correctPulse 0.6s ease;
+        }
+
+        .option.correct .option-letter {
+            background: var(--success);
+            color: white;
+        }
+
+        .option.incorrect {
+            border-color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+            animation: shake 0.5s ease;
+        }
+
+        .option.incorrect .option-letter {
+            background: var(--error);
+            color: white;
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .explanation {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: rgba(0, 183, 195, 0.1);
+            border-left: 4px solid var(--secondary);
+            border-radius: 0.5rem;
+            display: none;
+        }
+
+        .explanation.show {
+            display: block;
+            animation: slideDown 0.4s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .explanation-title {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'DM Sans', sans-serif;
+            box-shadow: 0 4px 20px rgba(0, 120, 212, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 120, 212, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .results {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--bg-card);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideIn 0.6s ease;
+        }
+
+        .results-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .results-score {
+            font-size: 4rem;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+            margin: 1.5rem 0;
+        }
+
+        .results-message {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-item {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .stat-value.success { color: var(--success); }
+        .stat-value.error { color: var(--error); }
+
+        @media (max-width: 640px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .question-text {
+                font-size: 1rem;
+            }
+
+            .score-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .option {
+                padding: 1rem;
+            }
+        }
+
+        .feedback-icon {
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖥️ QCM - La barre des tâches Windows</h1>
+            <p class="subtitle">Testez vos connaissances sur la barre des tâches de Windows</p>
+        </header>
+
+        <div id="quiz-container">
+            <div class="score-panel">
+                <div class="score-item">
+                    <div class="score-label">Question</div>
+                    <div class="score-value" id="current-question">1</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Score</div>
+                    <div class="score-value" id="score">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Bonnes réponses</div>
+                    <div class="score-value" style="color: var(--success);" id="correct-count">0</div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+
+            <div id="question-container"></div>
+
+            <div class="btn-container">
+                <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>
+                    Question suivante →
+                </button>
+            </div>
+        </div>
+
+        <div class="results" id="results">
+            <div class="results-title">🎉 Quiz terminé !</div>
+            <div class="results-score" id="final-score">0/30</div>
+            <div class="results-message" id="results-message"></div>
+            
+            <div class="results-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Bonnes réponses</div>
+                    <div class="stat-value success" id="final-correct">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Mauvaises réponses</div>
+                    <div class="stat-value error" id="final-incorrect">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Pourcentage</div>
+                    <div class="stat-value" id="final-percentage">0%</div>
+                </div>
+            </div>
+
+            <div class="btn-container">
+                <button class="btn" onclick="restartQuiz()">Recommencer le quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Où se situe généralement la barre des tâches Windows par défaut ?",
+                options: ["En haut de l'écran", "En bas de l'écran", "À gauche de l'écran", "À droite de l'écran"],
+                correct: 1,
+                explanation: "Par défaut, la barre des tâches Windows se trouve en bas de l'écran, mais elle peut être déplacée."
+            },
+            {
+                question: "Quel est le raccourci clavier pour ouvrir le menu Démarrer ?",
+                options: ["Ctrl + Échap", "Touche Windows", "Alt + Tab", "Ctrl + Alt + Suppr"],
+                correct: 1,
+                explanation: "La touche Windows (⊞ Win) ouvre le menu Démarrer. Ctrl + Échap fonctionne également."
+            },
+            {
+                question: "Que permet de faire un clic droit sur la barre des tâches ?",
+                options: ["Ouvrir le Gestionnaire des tâches", "Accéder aux paramètres de la barre des tâches", "Fermer toutes les fenêtres", "Redémarrer l'ordinateur"],
+                correct: 1,
+                explanation: "Un clic droit sur la barre des tâches affiche un menu contextuel permettant d'accéder aux paramètres et diverses options."
+            },
+            {
+                question: "Quelle fonctionnalité permet de voir rapidement le bureau sans fermer les fenêtres ?",
+                options: ["Le bouton Afficher le bureau", "Alt + Tab", "Win + D", "Les deux réponses A et C"],
+                correct: 3,
+                explanation: "Le bouton 'Afficher le bureau' situé à l'extrémité droite de la barre des tâches et le raccourci Win + D permettent tous deux de minimiser toutes les fenêtres."
+            },
+            {
+                question: "Comment appelle-t-on la zone à droite de la barre des tâches qui affiche l'heure et les icônes système ?",
+                options: ["Zone de notification", "Panneau système", "Barre d'état", "Zone d'information"],
+                correct: 0,
+                explanation: "Cette zone s'appelle la 'Zone de notification' (ou 'System Tray' en anglais). Elle affiche l'heure, la date et diverses icônes système."
+            },
+            {
+                question: "Quel raccourci clavier permet de basculer entre les fenêtres ouvertes ?",
+                options: ["Win + Tab", "Alt + Tab", "Ctrl + Tab", "Shift + Tab"],
+                correct: 1,
+                explanation: "Alt + Tab permet de basculer rapidement entre les applications ouvertes. Win + Tab ouvre la vue des tâches."
+            },
+            {
+                question: "Peut-on épingler des applications à la barre des tâches ?",
+                options: ["Oui, en faisant un clic droit sur l'application", "Non, ce n'est pas possible", "Oui, mais seulement 5 applications maximum", "Oui, mais uniquement les applications Microsoft"],
+                correct: 0,
+                explanation: "On peut épingler des applications à la barre des tâches en faisant un clic droit puis 'Épingler à la barre des tâches'."
+            },
+            {
+                question: "Que se passe-t-il quand on clique sur le bouton 'Afficher le bureau' une seconde fois ?",
+                options: ["Rien", "Les fenêtres se restaurent", "L'ordinateur se verrouille", "Le menu Démarrer s'ouvre"],
+                correct: 1,
+                explanation: "Un second clic sur 'Afficher le bureau' restaure toutes les fenêtres qui étaient ouvertes."
+            },
+            {
+                question: "Comment peut-on masquer automatiquement la barre des tâches ?",
+                options: ["Via les paramètres de la barre des tâches", "Ce n'est pas possible", "En appuyant sur F11", "Uniquement en mode tablette"],
+                correct: 0,
+                explanation: "Dans les paramètres de la barre des tâches, on peut activer l'option 'Masquer automatiquement la barre des tâches'."
+            },
+            {
+                question: "Quel est le nom de la fonctionnalité qui affiche toutes les fenêtres ouvertes en miniature ?",
+                options: ["Vue des tâches", "Aperçu rapide", "Multi-fenêtres", "Gestionnaire de fenêtres"],
+                correct: 0,
+                explanation: "La 'Vue des tâches' (Task View) accessible via Win + Tab affiche toutes les fenêtres ouvertes et les bureaux virtuels."
+            },
+            {
+                question: "Que permet de faire un clic sur l'icône du volume dans la zone de notification ?",
+                options: ["Ouvrir les paramètres son", "Régler le volume rapidement", "Changer le périphérique audio", "Toutes ces réponses"],
+                correct: 3,
+                explanation: "Un clic sur l'icône volume permet d'accéder rapidement au curseur de volume et aux paramètres audio."
+            },
+            {
+                question: "Peut-on déplacer la barre des tâches sur un autre bord de l'écran ?",
+                options: ["Oui, sur Windows 10 uniquement", "Oui, sur toutes les versions de Windows", "Non, elle est fixe", "Oui, mais pas sur Windows 11"],
+                correct: 3,
+                explanation: "Sur Windows 10, la barre des tâches peut être déplacée. Sur Windows 11, elle reste fixée en bas par défaut."
+            },
+            {
+                question: "Que signifie un badge numérique sur une icône de la barre des tâches ?",
+                options: ["Le nombre de fenêtres ouvertes", "Des notifications en attente", "L'application nécessite une mise à jour", "L'heure de la dernière utilisation"],
+                correct: 1,
+                explanation: "Un badge numérique indique le nombre de notifications non lues ou d'éléments en attente dans l'application."
+            },
+            {
+                question: "Comment accéder rapidement au Gestionnaire des tâches depuis la barre des tâches ?",
+                options: ["Clic droit sur la barre des tâches", "Alt + F4", "Win + X", "Ctrl + Shift + Échap"],
+                correct: 0,
+                explanation: "Un clic droit sur la barre des tâches permet d'accéder au Gestionnaire des tâches. Ctrl + Shift + Échap l'ouvre directement."
+            },
+            {
+                question: "Quelle est la fonction du bouton 'Recherche' sur la barre des tâches Windows 10/11 ?",
+                options: ["Rechercher des fichiers et applications", "Rechercher sur Internet", "Rechercher dans les paramètres", "Toutes ces réponses"],
+                correct: 3,
+                explanation: "La recherche Windows permet de trouver des fichiers, applications, paramètres et effectuer des recherches web."
+            },
+            {
+                question: "Que permet de faire la fonctionnalité 'Ancrer' (Snap) avec les fenêtres ?",
+                options: ["Fermer plusieurs fenêtres", "Organiser les fenêtres côte à côte", "Minimiser toutes les fenêtres", "Épingler des fenêtres"],
+                correct: 1,
+                explanation: "L'ancrage (Snap) permet d'organiser automatiquement les fenêtres côte à côte en les faisant glisser vers les bords de l'écran."
+            },
+            {
+                question: "Sur Windows 11, où est centré le menu Démarrer par défaut ?",
+                options: ["En haut à gauche", "Au centre de la barre des tâches", "En bas à gauche", "À droite de la barre des tâches"],
+                correct: 1,
+                explanation: "Sur Windows 11, le menu Démarrer et les icônes sont centrés par défaut, contrairement à Windows 10."
+            },
+            {
+                question: "Comment afficher les fenêtres ouvertes d'une application épinglée ?",
+                options: ["Clic gauche", "Clic droit", "Survol de la souris", "Double-clic"],
+                correct: 2,
+                explanation: "En survolant une icône dans la barre des tâches, un aperçu miniature de toutes les fenêtres ouvertes s'affiche."
+            },
+            {
+                question: "Que représente une barre sous une icône dans la barre des tâches ?",
+                options: ["L'application est favorite", "L'application est en cours d'exécution", "L'application a une mise à jour", "L'application est épinglée"],
+                correct: 1,
+                explanation: "Une barre (ou un trait) sous une icône indique que l'application correspondante est actuellement en cours d'exécution."
+            },
+            {
+                question: "Peut-on personnaliser la taille de la barre des tâches ?",
+                options: ["Oui, sur Windows 10", "Oui, sur toutes les versions", "Non, la taille est fixe", "Oui, mais uniquement en mode développeur"],
+                correct: 0,
+                explanation: "Sur Windows 10, on peut ajuster la taille de la barre des tâches. Windows 11 a une taille fixe par défaut."
+            },
+            {
+                question: "Quelle touche combinée avec Windows permet d'ouvrir les paramètres rapides ?",
+                options: ["Win + I", "Win + A", "Win + S", "Win + X"],
+                correct: 1,
+                explanation: "Win + A ouvre le Centre de notifications et les paramètres rapides (Wi-Fi, Bluetooth, etc.)."
+            },
+            {
+                question: "Comment fermer une fenêtre directement depuis son aperçu dans la barre des tâches ?",
+                options: ["Cliquer sur le X dans l'aperçu", "Faire un clic droit", "Appuyer sur Suppr", "Ce n'est pas possible"],
+                correct: 0,
+                explanation: "Lorsqu'on survole une icône pour voir l'aperçu, un bouton X apparaît pour fermer rapidement la fenêtre."
+            },
+            {
+                question: "Quel est le raccourci pour épingler rapidement une fenêtre active à la barre des tâches ?",
+                options: ["Ctrl + P", "Pas de raccourci direct", "Win + P", "Alt + P"],
+                correct: 1,
+                explanation: "Il n'y a pas de raccourci clavier direct. Il faut faire un clic droit sur l'icône puis choisir 'Épingler à la barre des tâches'."
+            },
+            {
+                question: "Que permet de faire Win + (chiffre 1-9) ?",
+                options: ["Ouvrir l'application correspondante dans la barre des tâches", "Changer de bureau virtuel", "Régler le volume", "Verrouiller l'écran"],
+                correct: 0,
+                explanation: "Win + chiffre ouvre ou bascule vers l'application correspondante dans la barre des tâches (1 pour la première, 2 pour la deuxième, etc.)."
+            },
+            {
+                question: "Peut-on afficher plusieurs langues dans la barre des tâches ?",
+                options: ["Oui, via l'indicateur de langue", "Non, une seule langue possible", "Oui, mais maximum 3 langues", "Uniquement sur les versions professionnelles"],
+                correct: 0,
+                explanation: "L'indicateur de langue dans la zone de notification permet de basculer entre plusieurs dispositions de clavier installées."
+            },
+            {
+                question: "Que fait le raccourci Win + B ?",
+                options: ["Ouvre le Bluetooth", "Met le focus sur la zone de notification", "Ouvre le navigateur", "Affiche la batterie"],
+                correct: 1,
+                explanation: "Win + B place le focus sur la zone de notification (System Tray), permettant de naviguer avec les touches fléchées."
+            },
+            {
+                question: "Comment masquer une icône de la zone de notification ?",
+                options: ["Paramètres > Personnalisation > Barre des tâches", "Clic droit > Masquer", "Ce n'est pas possible", "Supprimer l'application"],
+                correct: 0,
+                explanation: "Dans Paramètres > Personnalisation > Barre des tâches, on peut choisir quelles icônes apparaissent dans la zone de notification."
+            },
+            {
+                question: "Quelle nouveauté de la barre des tâches Windows 11 concerne les widgets ?",
+                options: ["Les widgets ont été supprimés", "Un bouton dédié aux widgets a été ajouté", "Les widgets sont dans le menu Démarrer", "Les widgets ne concernent que Windows 10"],
+                correct: 1,
+                explanation: "Windows 11 a ajouté un bouton dédié aux widgets dans la barre des tâches, offrant un accès rapide aux informations."
+            },
+            {
+                question: "Peut-on grouper les boutons de fenêtres similaires dans la barre des tâches ?",
+                options: ["Oui, c'est configurable", "Non, jamais", "Uniquement sur Windows 7", "Oui, mais pas sur Windows 11"],
+                correct: 0,
+                explanation: "On peut configurer le regroupement des boutons dans les paramètres de la barre des tâches (jamais, toujours, ou quand la barre est pleine)."
+            },
+            {
+                question: "Que signifie l'icône du bouclier jaune/bleu dans la zone de notification ?",
+                options: ["Antivirus actif", "Windows Update disponible", "Centre de sécurité Windows", "Pare-feu actif"],
+                correct: 2,
+                explanation: "L'icône de bouclier représente le Centre de sécurité Windows (Windows Security), qui supervise la protection de l'ordinateur."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let answered = false;
+
+        function loadQuestion() {
+            answered = false;
+            const question = questions[currentQuestionIndex];
+            const container = document.getElementById('question-container');
+            
+            const letters = ['A', 'B', 'C', 'D'];
+            
+            container.innerHTML = `
+                <div class="question-card">
+                    <div class="question-header">
+                        <div class="question-number">${currentQuestionIndex + 1}</div>
+                        <div class="question-text">${question.question}</div>
+                    </div>
+                    <div class="options">
+                        ${question.options.map((option, index) => `
+                            <div class="option" onclick="selectAnswer(${index})">
+                                <div class="option-content">
+                                    <div class="option-letter">${letters[index]}</div>
+                                    <div>${option}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="explanation" id="explanation">
+                        <div class="explanation-title">
+                            <span class="feedback-icon">💡</span>
+                            Explication
+                        </div>
+                        <div>${question.explanation}</div>
+                    </div>
+                </div>
+            `;
+
+            updateProgress();
+            document.getElementById('current-question').textContent = currentQuestionIndex + 1;
+            document.getElementById('next-btn').disabled = true;
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (answered) return;
+            
+            answered = true;
+            const question = questions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+            const isCorrect = selectedIndex === question.correct;
+            
+            options[selectedIndex].classList.add('selected');
+            
+            setTimeout(() => {
+                options.forEach((option, index) => {
+                    option.classList.add('disabled');
+                    if (index === question.correct) {
+                        option.classList.add('correct');
+                    } else if (index === selectedIndex && !isCorrect) {
+                        option.classList.add('incorrect');
+                    }
+                });
+
+                if (isCorrect) {
+                    score += Math.round(100 / questions.length);
+                    correctAnswers++;
+                    document.getElementById('correct-count').textContent = correctAnswers;
+                }
+
+                document.getElementById('score').textContent = score;
+                document.getElementById('explanation').classList.add('show');
+                document.getElementById('next-btn').disabled = false;
+            }, 300);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestionIndex) / questions.length) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+        }
+
+        function showResults() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('results').classList.add('show');
+            
+            const percentage = Math.round((correctAnswers / questions.length) * 100);
+            const incorrectAnswers = questions.length - correctAnswers;
+            
+            document.getElementById('final-score').textContent = `${correctAnswers}/${questions.length}`;
+            document.getElementById('final-correct').textContent = correctAnswers;
+            document.getElementById('final-incorrect').textContent = incorrectAnswers;
+            document.getElementById('final-percentage').textContent = percentage + '%';
+            
+            let message = '';
+            if (percentage >= 90) {
+                message = "🏆 Excellent ! Vous maîtrisez parfaitement la barre des tâches Windows !";
+            } else if (percentage >= 75) {
+                message = "🎯 Très bien ! Vous avez de solides connaissances.";
+            } else if (percentage >= 60) {
+                message = "👍 Bien ! Vous connaissez les bases, continuez à pratiquer.";
+            } else if (percentage >= 40) {
+                message = "📚 Pas mal, mais il reste des choses à apprendre.";
+            } else {
+                message = "💪 Continuez à vous entraîner, vous progresserez !";
+            }
+            
+            document.getElementById('results-message').textContent = message;
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            correctAnswers = 0;
+            answered = false;
+            
+            document.getElementById('score').textContent = '0';
+            document.getElementById('correct-count').textContent = '0';
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('results').classList.remove('show');
+            
+            loadQuestion();
+        }
+
+        // Initialisation
+        loadQuestion();
+    </script>
+</body>
+</html>

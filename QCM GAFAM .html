@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCM - Les GAFAM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --google: #4285f4;
+            --apple: #555555;
+            --facebook: #1877f2;
+            --amazon: #ff9900;
+            --microsoft: #0078d4;
+            --bg-dark: #0a0e27;
+            --bg-card: #151932;
+            --bg-lighter: #1e2442;
+            --text: #e8eaed;
+            --text-muted: #9aa0a6;
+            --success: #34a853;
+            --error: #ea4335;
+            --border: #2d3452;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(66, 133, 244, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(255, 153, 0, 0.08) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 50px 40px;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-lighter) 100%);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--google), var(--facebook), var(--amazon), var(--microsoft));
+        }
+
+        .gafam-logos {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .logo-badge {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .logo-badge.g { background: var(--google); }
+        .logo-badge.a { background: var(--apple); }
+        .logo-badge.f { background: var(--facebook); }
+        .logo-badge.am { background: var(--amazon); color: #232f3e; }
+        .logo-badge.m { background: var(--microsoft); }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--google), var(--facebook));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .progress-section {
+            margin-bottom: 40px;
+        }
+
+        .progress-bar {
+            background: var(--bg-card);
+            height: 12px;
+            border-radius: 100px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--google), var(--facebook), var(--amazon));
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(66, 133, 244, 0.6);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--google);
+            box-shadow: 0 10px 30px rgba(66, 133, 244, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(135deg, var(--google), var(--microsoft));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .question-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .question-card.answered-correct {
+            border-color: var(--success);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(52, 168, 83, 0.05) 100%);
+        }
+
+        .question-card.answered-wrong {
+            border-color: var(--error);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(234, 67, 53, 0.05) 100%);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .question-number {
+            background: linear-gradient(135deg, var(--google), var(--facebook));
+            color: white;
+            padding: 10px 24px;
+            border-radius: 100px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .company-badge {
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            color: var(--text);
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            background: var(--bg-lighter);
+            padding: 20px 25px;
+            border-radius: 14px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 5px;
+            background: var(--google);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .option:hover {
+            border-color: var(--google);
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.2);
+        }
+
+        .option:hover::before {
+            transform: scaleY(1);
+        }
+
+        .option.selected {
+            border-color: var(--amazon);
+            background: rgba(255, 153, 0, 0.1);
+        }
+
+        .option.correct {
+            border-color: var(--success);
+            background: rgba(52, 168, 83, 0.1);
+        }
+
+        .option.wrong {
+            border-color: var(--error);
+            background: rgba(234, 67, 53, 0.1);
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .feedback {
+            margin-top: 25px;
+            padding: 20px 25px;
+            border-radius: 14px;
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback.show {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .feedback.correct {
+            background: rgba(52, 168, 83, 0.15);
+            border: 2px solid var(--success);
+        }
+
+        .feedback.wrong {
+            background: rgba(234, 67, 53, 0.15);
+            border: 2px solid var(--error);
+        }
+
+        .feedback-icon {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .feedback-text {
+            flex: 1;
+            line-height: 1.6;
+        }
+
+        .results-container {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 60px 50px;
+            text-align: center;
+            margin-top: 40px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        .results-container.show {
+            display: block;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .results-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--google), var(--facebook), var(--amazon));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .results-score {
+            font-size: 6rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--google), var(--microsoft));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .results-message {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            color: var(--text-muted);
+        }
+
+        .results-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .result-detail {
+            text-align: center;
+            padding: 20px;
+            background: var(--bg-lighter);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .result-number {
+            font-size: 3rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 10px;
+        }
+
+        .result-number.correct { color: var(--success); }
+        .result-number.wrong { color: var(--error); }
+        .result-number.percentage { 
+            background: linear-gradient(135deg, var(--google), var(--facebook));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .result-label {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--google), var(--facebook));
+            color: white;
+            padding: 18px 45px;
+            border: none;
+            border-radius: 100px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(66, 133, 244, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(66, 133, 244, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.2rem; }
+            .question-card { padding: 25px; }
+            .question-text { font-size: 1.2rem; }
+            .results-score { font-size: 4rem; }
+            .stats { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="gafam-logos">
+                <div class="logo-badge g">G</div>
+                <div class="logo-badge a">A</div>
+                <div class="logo-badge f">F</div>
+                <div class="logo-badge am">A</div>
+                <div class="logo-badge m">M</div>
+            </div>
+            <h1>QCM LES GAFAM</h1>
+            <p class="subtitle">Testez vos connaissances sur les géants du numérique</p>
+        </header>
+
+        <div class="progress-section">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="currentQuestion">0</div>
+                    <div class="stat-label">Question</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="correctAnswers">0</div>
+                    <div class="stat-label">Correctes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">30</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quizContainer"></div>
+
+        <div class="results-container" id="results">
+            <div class="results-title">🎉 Résultats Finaux</div>
+            <div class="results-score" id="finalScore">0/30</div>
+            <div class="results-message" id="resultMessage"></div>
+            <div class="results-details">
+                <div class="result-detail">
+                    <div class="result-number correct" id="finalCorrect">0</div>
+                    <div class="result-label">Correctes</div>
+                </div>
+                <div class="result-detail">
+                    <div class="result-number wrong" id="finalWrong">0</div>
+                    <div class="result-label">Incorrectes</div>
+                </div>
+                <div class="result-detail">
+                    <div class="result-number percentage" id="finalPercentage">0%</div>
+                    <div class="result-label">Score</div>
+                </div>
+            </div>
+            <button class="btn" onclick="location.reload()">🔄 Recommencer</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "En quelle année Google a-t-il été fondé ?",
+                options: ["1996", "1998", "2000", "2004"],
+                correct: 1,
+                company: "Google",
+                explanation: "Google a été fondé en 1998 par Larry Page et Sergey Brin à Stanford."
+            },
+            {
+                question: "Qui est l'actuel CEO de Google (Alphabet) ?",
+                options: ["Larry Page", "Sergey Brin", "Sundar Pichai", "Eric Schmidt"],
+                correct: 2,
+                company: "Google",
+                explanation: "Sundar Pichai est CEO de Google depuis 2015 et d'Alphabet depuis 2019."
+            },
+            {
+                question: "Quelle est la part de marché mondiale de Google dans la recherche ?",
+                options: ["75%", "85%", "92%", "98%"],
+                correct: 2,
+                company: "Google",
+                explanation: "Google détient environ 92% du marché mondial des moteurs de recherche."
+            },
+            {
+                question: "En quelle année Apple a-t-il été fondé ?",
+                options: ["1975", "1976", "1977", "1980"],
+                correct: 1,
+                company: "Apple",
+                explanation: "Apple a été fondé en 1976 par Steve Jobs, Steve Wozniak et Ronald Wayne."
+            },
+            {
+                question: "Qui est le CEO actuel d'Apple ?",
+                options: ["Steve Jobs", "Tim Cook", "Jony Ive", "Steve Wozniak"],
+                correct: 1,
+                company: "Apple",
+                explanation: "Tim Cook est le CEO d'Apple depuis 2011, après Steve Jobs."
+            },
+            {
+                question: "Quelle est approximativement la capitalisation boursière d'Apple en 2024 ?",
+                options: ["1500 Mds $", "2500 Mds $", "3500 Mds $", "4500 Mds $"],
+                correct: 2,
+                company: "Apple",
+                explanation: "Apple est l'entreprise la plus valorisée au monde avec environ 3500 milliards de dollars."
+            },
+            {
+                question: "En quelle année Facebook a-t-il été créé ?",
+                options: ["2002", "2003", "2004", "2005"],
+                correct: 2,
+                company: "Facebook",
+                explanation: "Facebook a été lancé en 2004 par Mark Zuckerberg depuis sa chambre d'étudiant à Harvard."
+            },
+            {
+                question: "En quelle année Facebook a-t-il changé de nom pour devenir Meta ?",
+                options: ["2019", "2020", "2021", "2022"],
+                correct: 2,
+                company: "Facebook",
+                explanation: "Facebook est devenu Meta Platforms en octobre 2021 pour refléter son orientation vers le métavers."
+            },
+            {
+                question: "Combien d'utilisateurs actifs Facebook compte-t-il environ ?",
+                options: ["1 milliard", "2 milliards", "3 milliards", "4 milliards"],
+                correct: 2,
+                company: "Facebook",
+                explanation: "Facebook compte environ 3 milliards d'utilisateurs actifs mensuels dans le monde."
+            },
+            {
+                question: "Quelles applications appartiennent à Meta ?",
+                options: ["Facebook et Twitter", "Facebook, Instagram et WhatsApp", "Facebook et TikTok", "Facebook et LinkedIn"],
+                correct: 1,
+                company: "Facebook",
+                explanation: "Meta possède Facebook, Instagram, WhatsApp et Messenger."
+            },
+            {
+                question: "En quelle année Amazon a-t-il été fondé ?",
+                options: ["1992", "1994", "1996", "1998"],
+                correct: 1,
+                company: "Amazon",
+                explanation: "Amazon a été fondé par Jeff Bezos en 1994 dans un garage à Seattle."
+            },
+            {
+                question: "Qui est l'actuel CEO d'Amazon ?",
+                options: ["Jeff Bezos", "Andy Jassy", "Tim Cook", "Satya Nadella"],
+                correct: 1,
+                company: "Amazon",
+                explanation: "Andy Jassy est devenu CEO d'Amazon en 2021, après avoir dirigé AWS."
+            },
+            {
+                question: "Quelle est la part de marché d'AWS dans le cloud computing ?",
+                options: ["23%", "28%", "32%", "38%"],
+                correct: 2,
+                company: "Amazon",
+                explanation: "AWS (Amazon Web Services) détient environ 32% du marché mondial du cloud computing."
+            },
+            {
+                question: "Qu'est-ce qu'AWS ?",
+                options: ["Un service de livraison", "Une plateforme de cloud computing", "Un réseau social", "Un système d'exploitation"],
+                correct: 1,
+                company: "Amazon",
+                explanation: "AWS (Amazon Web Services) est la plateforme de cloud computing d'Amazon, leader mondial."
+            },
+            {
+                question: "En quelle année Microsoft a-t-il été fondé ?",
+                options: ["1973", "1975", "1977", "1980"],
+                correct: 1,
+                company: "Microsoft",
+                explanation: "Microsoft a été fondé en 1975 par Bill Gates et Paul Allen."
+            },
+            {
+                question: "Qui est l'actuel CEO de Microsoft ?",
+                options: ["Bill Gates", "Steve Ballmer", "Satya Nadella", "Paul Allen"],
+                correct: 2,
+                company: "Microsoft",
+                explanation: "Satya Nadella est CEO de Microsoft depuis 2014."
+            },
+            {
+                question: "Quelle est la part de marché de Windows dans les OS desktop ?",
+                options: ["65%", "70%", "73%", "80%"],
+                correct: 2,
+                company: "Microsoft",
+                explanation: "Windows détient environ 73% du marché mondial des systèmes d'exploitation pour ordinateurs."
+            },
+            {
+                question: "Quel service cloud Microsoft propose-t-il ?",
+                options: ["AWS", "Google Cloud", "Azure", "iCloud"],
+                correct: 2,
+                company: "Microsoft",
+                explanation: "Microsoft Azure est le service de cloud computing de Microsoft, 2ème mondial après AWS."
+            },
+            {
+                question: "Quelle entreprise Microsoft a-t-elle acquise en 2023 pour ~69 milliards $ ?",
+                options: ["Electronic Arts", "Activision Blizzard", "Epic Games", "Ubisoft"],
+                correct: 1,
+                company: "Microsoft",
+                explanation: "Microsoft a acquis Activision Blizzard en 2023, la plus grosse acquisition de son histoire."
+            },
+            {
+                question: "Quelle est approximativement la capitalisation boursière cumulée des GAFAM ?",
+                options: ["5000 Mds $", "8000 Mds $", "10000 Mds $", "15000 Mds $"],
+                correct: 2,
+                company: "General",
+                explanation: "Les GAFAM représentent environ 10 000 milliards de dollars de capitalisation boursière cumulée."
+            },
+            {
+                question: "Quel modèle économique génère l'essentiel des revenus de Google et Meta ?",
+                options: ["Vente de matériel", "Abonnements", "Publicité en ligne", "Cloud computing"],
+                correct: 2,
+                company: "General",
+                explanation: "Google et Meta tirent la majorité de leurs revenus de la publicité ciblée en ligne."
+            },
+            {
+                question: "Quel système d'exploitation mobile Google a-t-il développé ?",
+                options: ["iOS", "Android", "Windows Mobile", "BlackBerry OS"],
+                correct: 1,
+                company: "Google",
+                explanation: "Android, développé par Google, équipe environ 70% des smartphones mondiaux."
+            },
+            {
+                question: "Combien d'utilisateurs actifs YouTube compte-t-il environ ?",
+                options: ["1 milliard", "1,5 milliard", "2,5 milliards", "3,5 milliards"],
+                correct: 2,
+                company: "Google",
+                explanation: "YouTube compte environ 2,5 milliards d'utilisateurs actifs mensuels."
+            },
+            {
+                question: "Quel produit Apple a révolutionné l'industrie en 2007 ?",
+                options: ["iPad", "iPhone", "MacBook", "Apple Watch"],
+                correct: 1,
+                company: "Apple",
+                explanation: "L'iPhone, lancé en 2007, a révolutionné l'industrie du smartphone."
+            },
+            {
+                question: "Combien d'abonnés Amazon Prime compte-t-il environ dans le monde ?",
+                options: ["100 millions", "150 millions", "200 millions", "250 millions"],
+                correct: 2,
+                company: "Amazon",
+                explanation: "Amazon Prime compte environ 200 millions d'abonnés dans le monde."
+            },
+            {
+                question: "Quel est le principal concurrent de Microsoft dans le cloud computing ?",
+                options: ["IBM Cloud", "Oracle Cloud", "Amazon AWS", "Alibaba Cloud"],
+                correct: 2,
+                company: "Microsoft",
+                explanation: "Amazon AWS est le principal concurrent de Microsoft Azure, leader du marché avec 32%."
+            },
+            {
+                question: "Quelle entreprise d'IA Microsoft a-t-elle massivement investi ?",
+                options: ["DeepMind", "OpenAI", "Anthropic", "Hugging Face"],
+                correct: 1,
+                company: "Microsoft",
+                explanation: "Microsoft a investi plus de 10 milliards de dollars dans OpenAI, créateur de ChatGPT."
+            },
+            {
+                question: "Quelle réglementation européenne vise à encadrer les GAFAM ?",
+                options: ["GDPR", "DMA et DSA", "CCPA", "HIPAA"],
+                correct: 1,
+                company: "General",
+                explanation: "Le Digital Markets Act (DMA) et le Digital Services Act (DSA) visent à réguler les géants du numérique en Europe."
+            },
+            {
+                question: "Quel pourcentage des revenus de Meta provient de la publicité ?",
+                options: ["85%", "90%", "95%", "98%"],
+                correct: 3,
+                company: "Facebook",
+                explanation: "Environ 98% des revenus de Meta proviennent de la publicité sur ses plateformes."
+            },
+            {
+                question: "Quel est le principal défi réglementaire des GAFAM aujourd'hui ?",
+                options: ["Brevets", "Position dominante et monopole", "Fiscalité locale", "Normes environnementales"],
+                correct: 1,
+                company: "General",
+                explanation: "Les GAFAM font face à des enquêtes antitrust mondiales pour abus de position dominante."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+        let answeredQuestions = 0;
+
+        const companyColors = {
+            'Google': 'var(--google)',
+            'Apple': 'var(--apple)',
+            'Facebook': 'var(--facebook)',
+            'Amazon': 'var(--amazon)',
+            'Microsoft': 'var(--microsoft)',
+            'General': 'var(--text-muted)'
+        };
+
+        function createQuiz() {
+            const container = document.getElementById('quizContainer');
+            
+            questions.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.id = `question-${index}`;
+                
+                const companyBadge = q.company !== 'General' ? 
+                    `<span class="company-badge" style="background: ${companyColors[q.company]}">${q.company}</span>` : '';
+                
+                card.innerHTML = `
+                    <div class="question-header">
+                        <span class="question-number">Question ${index + 1}/30</span>
+                        ${companyBadge}
+                    </div>
+                    <div class="question-text">${q.question}</div>
+                    <div class="options">
+                        ${q.options.map((option, i) => `
+                            <div class="option" onclick="selectAnswer(${index}, ${i})">
+                                ${option}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="feedback" id="feedback-${index}">
+                        <span class="feedback-icon"></span>
+                        <span class="feedback-text"></span>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function selectAnswer(questionIndex, optionIndex) {
+            const card = document.getElementById(`question-${questionIndex}`);
+            const options = card.querySelectorAll('.option');
+            const feedback = document.getElementById(`feedback-${questionIndex}`);
+            const question = questions[questionIndex];
+            
+            if (options[0].classList.contains('disabled')) return;
+            
+            answeredQuestions++;
+            
+            options.forEach(opt => opt.classList.add('disabled'));
+            
+            options[optionIndex].classList.add('selected');
+            options[question.correct].classList.add('correct');
+            
+            const isCorrect = optionIndex === question.correct;
+            if (isCorrect) {
+                correctAnswers++;
+                feedback.classList.add('correct', 'show');
+                feedback.querySelector('.feedback-icon').textContent = '✓';
+                feedback.querySelector('.feedback-text').textContent = 'Correct ! ' + question.explanation;
+                card.classList.add('answered-correct');
+            } else {
+                options[optionIndex].classList.add('wrong');
+                feedback.classList.add('wrong', 'show');
+                feedback.querySelector('.feedback-icon').textContent = '✗';
+                feedback.querySelector('.feedback-text').textContent = 'Incorrect. ' + question.explanation;
+                card.classList.add('answered-wrong');
+            }
+            
+            updateStats();
+            
+            if (answeredQuestions === questions.length) {
+                setTimeout(showResults, 1000);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('currentQuestion').textContent = answeredQuestions;
+            document.getElementById('correctAnswers').textContent = correctAnswers;
+            
+            const progress = (answeredQuestions / questions.length) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+        }
+
+        function showResults() {
+            const percentage = Math.round((correctAnswers / questions.length) * 100);
+            
+            document.getElementById('finalScore').textContent = `${correctAnswers}/${questions.length}`;
+            document.getElementById('finalCorrect').textContent = correctAnswers;
+            document.getElementById('finalWrong').textContent = questions.length - correctAnswers;
+            document.getElementById('finalPercentage').textContent = percentage + '%';
+            
+            let message = '';
+            if (percentage >= 90) {
+                message = '🏆 Exceptionnel ! Vous êtes un expert des GAFAM !';
+            } else if (percentage >= 75) {
+                message = '🎯 Excellent ! Vous maîtrisez bien le sujet !';
+            } else if (percentage >= 60) {
+                message = '👍 Bien joué ! Continuez à vous documenter.';
+            } else {
+                message = '📚 Bon début ! Revoyez la présentation pour progresser.';
+            }
+            
+            document.getElementById('resultMessage').textContent = message;
+            document.getElementById('results').classList.add('show');
+            
+            setTimeout(() => {
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+
+        createQuiz();
+    </script>
+</body>
+</html>

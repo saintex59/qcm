@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercices Interactifs - Gestionnaire des tâches Windows</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0078d4 0%, #00a8e8 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .exercise {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #0078d4;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .exercise:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .exercise-number {
+            background: #0078d4;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .exercise-title {
+            flex: 1;
+            margin-left: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .question {
+            font-size: 16px;
+            color: #34495e;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .options {
+            margin: 15px 0;
+        }
+        
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .option:hover {
+            border-color: #0078d4;
+            background: #f0f8ff;
+        }
+        
+        .option input[type="radio"],
+        .option input[type="checkbox"] {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .option label {
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .input-answer {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        
+        .input-answer:focus {
+            outline: none;
+            border-color: #0078d4;
+        }
+        
+        .submit-btn {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 15px;
+        }
+        
+        .submit-btn:hover {
+            background: #005a9e;
+        }
+        
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+            display: block;
+        }
+        
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+            display: block;
+        }
+        
+        .score-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .score-container.show {
+            display: block;
+        }
+        
+        .score-container h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .score-container .score {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .final-submit {
+            background: linear-gradient(135deg, #00c853 0%, #00a843 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 30px auto;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        
+        .final-submit:hover {
+            transform: scale(1.05);
+        }
+        
+        .reset-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        
+        .reset-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Exercices Interactifs</h1>
+            <p>Testez vos connaissances sur le Gestionnaire des tâches Windows</p>
+        </div>
+        
+        <div class="content">
+            <!-- Exercice 1 -->
+            <div class="exercise" data-exercise="1">
+                <div class="exercise-header">
+                    <div class="exercise-number">1</div>
+                    <div class="exercise-title">Raccourci clavier</div>
+                </div>
+                <div class="question">Quel est le raccourci clavier le plus rapide pour ouvrir le Gestionnaire des tâches ?</div>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" name="q1" id="q1a" value="a">
+                        <label for="q1a">Ctrl + Alt + Suppr</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q1" id="q1b" value="b">
+                        <label for="q1b">Ctrl + Shift + Échap</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q1" id="q1c" value="c">
+                        <label for="q1c">Windows + R</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q1" id="q1d" value="d">
+                        <label for="q1d">Alt + F4</label>
+                    </div>
+                </div>
+                <button class="submit-btn" onclick="checkAnswer(1, 'b')">Vérifier</button>
+                <div class="feedback" id="feedback1"></div>
+            </div>
+
+            <!-- Exercice 2 -->
+            <div class="exercise" data-exercise="2">
+                <div class="exercise-header">
+                    <div class="exercise-number">2</div>
+                    <div class="exercise-title">Onglets du Gestionnaire</div>
+                </div>
+                <div class="question">Sélectionnez TOUS les onglets disponibles dans le Gestionnaire des tâches Windows 10/11 :</div>
+                <div class="options">
+                    <div class="option">
+                        <input type="checkbox" id="q2a" value="processus">
+                        <label for="q2a">Processus</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="q2b" value="performances">
+                        <label for="q2b">Performances</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="q2c" value="demarrage">
+                        <label for="q2c">Démarrage</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="q2d" value="applications">
+                        <label for="q2d">Applications installées</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="q2e" value="services">
+                        <label for="q2e">Services</label>
+                    </div>
+                </div>
+                <button class="submit-btn" onclick="checkMultiple(2, ['processus', 'performances', 'demarrage', 'services'])">Vérifier</button>
+                <div class="feedback" id="feedback2"></div>
+            </div>
+
+            <!-- Exercice 3 -->
+            <div class="exercise" data-exercise="3">
+                <div class="exercise-header">
+                    <div class="exercise-number">3</div>
+                    <div class="exercise-title">Action sur application bloquée</div>
+                </div>
+                <div class="question">Votre navigateur Web ne répond plus. Quelle est la meilleure action à effectuer dans le Gestionnaire des tâches ?</div>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" name="q3" id="q3a" value="a">
+                        <label for="q3a">Redémarrer l'ordinateur immédiatement</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q3" id="q3b" value="b">
+                        <label for="q3b">Clic droit sur le processus → Fin de tâche</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q3" id="q3c" value="c">
+                        <label for="q3c">Désactiver le processus au démarrage</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q3" id="q3d" value="d">
+                        <label for="q3d">Modifier la priorité du processus</label>
+                    </div>
+                </div>
+                <button class="submit-btn" onclick="checkAnswer(3, 'b')">Vérifier</button>
+                <div class="feedback" id="feedback3"></div>
+            </div>
+
+            <!-- Exercice 4 -->
+            <div class="exercise" data-exercise="4">
+                <div class="exercise-header">
+                    <div class="exercise-number">4</div>
+                    <div class="exercise-title">Commande d'exécution</div>
+                </div>
+                <div class="question">Quelle commande faut-il taper dans la boîte de dialogue "Exécuter" (Win + R) pour ouvrir le Gestionnaire des tâches ?</div>
+                <input type="text" class="input-answer" id="q4answer" placeholder="Tapez votre réponse ici...">
+                <button class="submit-btn" onclick="checkTextAnswer(4, 'taskmgr')">Vérifier</button>
+                <div class="feedback" id="feedback4"></div>
+            </div>
+
+            <!-- Exercice 5 -->
+            <div class="exercise" data-exercise="5">
+                <div class="exercise-header">
+                    <div class="exercise-number">5</div>
+                    <div class="exercise-title">Optimisation du démarrage</div>
+                </div>
+                <div class="question">Dans l'onglet Démarrage, vous voyez une application avec un impact "Élevé". Que devriez-vous faire ?</div>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" name="q5" id="q5a" value="a">
+                        <label for="q5a">La supprimer définitivement de l'ordinateur</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q5" id="q5b" value="b">
+                        <label for="q5b">Vérifier si elle est nécessaire, puis la désactiver si elle n'est pas essentielle</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q5" id="q5c" value="c">
+                        <label for="q5c">Ne rien faire, toutes les applications doivent démarrer</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q5" id="q5d" value="d">
+                        <label for="q5d">Augmenter sa priorité pour qu'elle démarre plus vite</label>
+                    </div>
+                </div>
+                <button class="submit-btn" onclick="checkAnswer(5, 'b')">Vérifier</button>
+                <div class="feedback" id="feedback5"></div>
+            </div>
+
+            <!-- Exercice 6 -->
+            <div class="exercise" data-exercise="6">
+                <div class="exercise-header">
+                    <div class="exercise-number">6</div>
+                    <div class="exercise-title">Surveillance des ressources</div>
+                </div>
+                <div class="question">Dans quel onglet pouvez-vous voir des graphiques en temps réel de l'utilisation du CPU, de la RAM et du disque ?</div>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" name="q6" id="q6a" value="a">
+                        <label for="q6a">Processus</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q6" id="q6b" value="b">
+                        <label for="q6b">Performances</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q6" id="q6c" value="c">
+                        <label for="q6c">Détails</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q6" id="q6d" value="d">
+                        <label for="q6d">Services</label>
+                    </div>
+                </div>
+                <button class="submit-btn" onclick="checkAnswer(6, 'b')">Vérifier</button>
+                <div class="feedback" id="feedback6"></div>
+            </div>
+
+            <!-- Exercice 7 -->
+            <div class="exercise" data-exercise="7">
+                <div class="exercise-header">
+                    <div class="exercise-number">7</div>
+                    <div class="exercise-title">Sécurité système</div>
+                </div>
+                <div class="question">Parmi ces processus, lesquels ne devez-vous JAMAIS terminer ? (Sélectionnez tous)</div>
+                <div class="options">
+                    <div class="option">
+                        <input type="checkbox" id="q7a" value="explorer">
+                        <label for="q7a">explorer.exe</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="q7b" value="chrome">
+                        <label for="q7b">chrome.exe</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="q7c" value="csrss">
+                        <label for="q7c">csrss.exe</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="q7d" value="winlogon">
+                        <label for="q7d">winlogon.exe</label>
+                    </div>
+                </div>
+                <button class="submit-btn" onclick="checkMultiple(7, ['explorer', 'csrss', 'winlogon'])">Vérifier</button>
+                <div class="feedback" id="feedback7"></div>
+            </div>
+
+            <!-- Exercice 8 -->
+            <div class="exercise" data-exercise="8">
+                <div class="exercise-header">
+                    <div class="exercise-number">8</div>
+                    <div class="exercise-title">Disque saturé</div>
+                </div>
+                <div class="question">Votre disque affiche 100% d'utilisation dans l'onglet Performances. Quelle est la première étape pour identifier le problème ?</div>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" name="q8" id="q8a" value="a">
+                        <label for="q8a">Redémarrer immédiatement l'ordinateur</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q8" id="q8b" value="b">
+                        <label for="q8b">Aller dans Processus et trier par la colonne "Disque"</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q8" id="q8c" value="c">
+                        <label for="q8c">Désactiver tous les programmes au démarrage</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q8" id="q8d" value="d">
+                        <label for="q8d">Acheter un nouveau disque dur</label>
+                    </div>
+                </div>
+                <button class="submit-btn" onclick="checkAnswer(8, 'b')">Vérifier</button>
+                <div class="feedback" id="feedback8"></div>
+            </div>
+
+            <!-- Exercice 9 -->
+            <div class="exercise" data-exercise="9">
+                <div class="exercise-header">
+                    <div class="exercise-number">9</div>
+                    <div class="exercise-title">Mode efficacité Windows 11</div>
+                </div>
+                <div class="question">Quelle est la fonction du "Mode efficacité" disponible dans Windows 11 ?</div>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" name="q9" id="q9a" value="a">
+                        <label for="q9a">Accélérer l'exécution d'une application</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q9" id="q9b" value="b">
+                        <label for="q9b">Limiter les ressources consommées par une application</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q9" id="q9c" value="c">
+                        <label for="q9c">Fermer automatiquement les applications inactives</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q9" id="q9d" value="d">
+                        <label for="q9d">Nettoyer les fichiers temporaires</label>
+                    </div>
+                </div>
+                <button class="submit-btn" onclick="checkAnswer(9, 'b')">Vérifier</button>
+                <div class="feedback" id="feedback9"></div>
+            </div>
+
+            <!-- Exercice 10 -->
+            <div class="exercise" data-exercise="10">
+                <div class="exercise-header">
+                    <div class="exercise-number">10</div>
+                    <div class="exercise-title">Situation pratique</div>
+                </div>
+                <div class="question">Votre ordinateur démarre en 2 minutes. Vous avez vérifié l'onglet Démarrage et trouvé 15 applications activées. Quelle est la meilleure approche ?</div>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" name="q10" id="q10a" value="a">
+                        <label for="q10a">Désactiver toutes les applications sauf Windows</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q10" id="q10b" value="b">
+                        <label for="q10b">Désactiver celles avec impact "Élevé" et "Moyen" qui ne sont pas essentielles</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q10" id="q10c" value="c">
+                        <label for="q10c">Ne rien changer, c'est normal d'avoir 15 applications au démarrage</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="q10" id="q10d" value="d">
+                        <label for="q10d">Désinstaller toutes les applications</label>
+                    </div>
+                </div>
+                <button class="submit-btn" onclick="checkAnswer(10, 'b')">Vérifier</button>
+                <div class="feedback" id="feedback10"></div>
+            </div>
+
+            <button class="final-submit" onclick="showFinalScore()">📊 Afficher mon score final</button>
+            
+            <div class="score-container" id="finalScore">
+                <h2>Votre Score Final</h2>
+                <div class="score" id="scoreDisplay">0/10</div>
+                <p id="scoreMessage"></p>
+                <button class="reset-btn" onclick="resetQuiz()">🔄 Recommencer le quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scores = {};
+        
+        function checkAnswer(questionNum, correctAnswer) {
+            const selected = document.querySelector(`input[name="q${questionNum}"]:checked`);
+            const feedback = document.getElementById(`feedback${questionNum}`);
+            
+            if (!selected) {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = '⚠️ Veuillez sélectionner une réponse.';
+                return;
+            }
+            
+            if (selected.value === correctAnswer) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = '✅ Correct ! Bonne réponse.';
+                scores[questionNum] = 1;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = '❌ Incorrect. Réessayez ou consultez la présentation pour trouver la bonne réponse.';
+                scores[questionNum] = 0;
+            }
+        }
+        
+        function checkMultiple(questionNum, correctAnswers) {
+            const checkboxes = document.querySelectorAll(`#q${questionNum}a, #q${questionNum}b, #q${questionNum}c, #q${questionNum}d, #q${questionNum}e`);
+            const selected = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            
+            const feedback = document.getElementById(`feedback${questionNum}`);
+            
+            if (selected.length === 0) {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = '⚠️ Veuillez sélectionner au moins une réponse.';
+                return;
+            }
+            
+            const isCorrect = correctAnswers.length === selected.length && 
+                              correctAnswers.every(ans => selected.includes(ans));
+            
+            if (isCorrect) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = '✅ Correct ! Vous avez identifié toutes les bonnes réponses.';
+                scores[questionNum] = 1;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = '❌ Incorrect. Il manque des réponses ou certaines sont incorrectes.';
+                scores[questionNum] = 0;
+            }
+        }
+        
+        function checkTextAnswer(questionNum, correctAnswer) {
+            const input = document.getElementById(`q${questionNum}answer`);
+            const userAnswer = input.value.trim().toLowerCase();
+            const feedback = document.getElementById(`feedback${questionNum}`);
+            
+            if (!userAnswer) {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = '⚠️ Veuillez entrer une réponse.';
+                return;
+            }
+            
+            if (userAnswer === correctAnswer.toLowerCase()) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = `✅ Correct ! La commande est "${correctAnswer}".`;
+                scores[questionNum] = 1;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.innerHTML = `❌ Incorrect. La bonne réponse est "${correctAnswer}".`;
+                scores[questionNum] = 0;
+            }
+        }
+        
+        function showFinalScore() {
+            const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
+            const scoreContainer = document.getElementById('finalScore');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const scoreMessage = document.getElementById('scoreMessage');
+            
+            scoreDisplay.textContent = `${totalScore}/10`;
+            
+            if (totalScore === 10) {
+                scoreMessage.textContent = '🏆 Parfait ! Vous maîtrisez le Gestionnaire des tâches !';
+            } else if (totalScore >= 7) {
+                scoreMessage.textContent = '👍 Très bien ! Vous avez une bonne compréhension du sujet.';
+            } else if (totalScore >= 5) {
+                scoreMessage.textContent = '📚 Pas mal ! Relisez la présentation pour améliorer vos connaissances.';
+            } else {
+                scoreMessage.textContent = '💪 Continuez à apprendre ! Revoyez la présentation attentivement.';
+            }
+            
+            scoreContainer.classList.add('show');
+            scoreContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function resetQuiz() {
+            scores = {};
+            
+            // Reset all inputs
+            document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
+                input.checked = false;
+            });
+            
+            document.querySelectorAll('input[type="text"]').forEach(input => {
+                input.value = '';
+            });
+            
+            // Hide all feedback
+            document.querySelectorAll('.feedback').forEach(feedback => {
+                feedback.style.display = 'none';
+            });
+            
+            // Hide score
+            document.getElementById('finalScore').classList.remove('show');
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCM Intelligence Artificielle - 30 Questions</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        
+        .progress-bar {
+            background: var(--bg-card);
+            border-radius: 12px;
+            height: 12px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            flex: 1;
+            min-width: 150px;
+            background: var(--bg-card);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .question-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            opacity: 1;
+        }
+        
+        .question-card.answered-correct {
+            border-color: var(--success);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-card) 100%);
+        }
+        
+        .question-card.answered-incorrect {
+            border-color: var(--error);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, var(--bg-card) 100%);
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+        
+        .question-number {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.5;
+            flex: 1;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .option {
+            background: var(--bg-main);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .option:hover:not(.disabled) {
+            background: var(--bg-hover);
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+        
+        .option.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .option.correct {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+        
+        .option.incorrect {
+            background: var(--error);
+            border-color: var(--error);
+            color: white;
+        }
+        
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .option-letter {
+            width: 32px;
+            height: 32px;
+            background: var(--border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        
+        .option.selected .option-letter,
+        .option.correct .option-letter,
+        .option.incorrect .option-letter {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .explanation {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: rgba(139, 92, 246, 0.1);
+            border-left: 4px solid var(--secondary);
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .explanation.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .explanation-title {
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .explanation-text {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-main);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .results-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            border: 1px solid var(--border);
+            display: none;
+        }
+        
+        .results-card.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .results-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        
+        .results-score {
+            font-size: 4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2rem;
+        }
+        
+        .results-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .result-detail {
+            padding: 1rem;
+            background: var(--bg-main);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .result-detail-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .result-detail-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 500px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .question-text {
+                font-size: 1.1rem;
+            }
+            
+            .stats {
+                gap: 0.75rem;
+            }
+            
+            .stat-card {
+                min-width: 120px;
+                padding: 0.75rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 QCM Intelligence Artificielle</h1>
+            <p>Testez vos connaissances avec 30 questions sur l'IA</p>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-value" id="questionCounter">0/30</span>
+                <span class="stat-label">Questions</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="correctCounter" style="color: var(--success)">0</span>
+                <span class="stat-label">Correctes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="incorrectCounter" style="color: var(--error)">0</span>
+                <span class="stat-label">Incorrectes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="scorePercent">0%</span>
+                <span class="stat-label">Score</span>
+            </div>
+        </div>
+        
+        <div id="questionsContainer"></div>
+        
+        <div class="results-card" id="resultsCard">
+            <h2 class="results-title">🎉 Quiz terminé !</h2>
+            <div class="results-score" id="finalScore">0%</div>
+            <div class="results-details">
+                <div class="result-detail">
+                    <span class="result-detail-value" id="finalCorrect" style="color: var(--success)">0</span>
+                    <span class="result-detail-label">Bonnes réponses</span>
+                </div>
+                <div class="result-detail">
+                    <span class="result-detail-value" id="finalIncorrect" style="color: var(--error)">0</span>
+                    <span class="result-detail-label">Mauvaises réponses</span>
+                </div>
+                <div class="result-detail">
+                    <span class="result-detail-value" id="finalTotal">30</span>
+                    <span class="result-detail-label">Total questions</span>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="location.reload()">🔄 Recommencer le quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Que signifie l'acronyme IA ?",
+                options: ["Intelligence Avancée", "Intelligence Artificielle", "Informatique Automatisée", "Internet Algorithmique"],
+                correct: 1,
+                explanation: "IA signifie Intelligence Artificielle. C'est un domaine de l'informatique qui vise à créer des machines capables d'effectuer des tâches nécessitant normalement l'intelligence humaine."
+            },
+            {
+                question: "Quel type de modèle d'IA apprend à partir d'exemples étiquetés ?",
+                options: ["Apprentissage non supervisé", "Apprentissage supervisé", "Apprentissage par renforcement", "Apprentissage automatique"],
+                correct: 1,
+                explanation: "L'apprentissage supervisé utilise des données étiquetées (avec réponses connues) pour entraîner le modèle à faire des prédictions sur de nouvelles données."
+            },
+            {
+                question: "Que signifie GPT dans ChatGPT ?",
+                options: ["General Processing Technology", "Generative Pre-trained Transformer", "Global Prediction Tool", "Graphic Processing Text"],
+                correct: 1,
+                explanation: "GPT signifie Generative Pre-trained Transformer. C'est une architecture de réseau de neurones spécialisée dans la génération de texte."
+            },
+            {
+                question: "Quel composant matériel est le plus utilisé pour entraîner des modèles d'IA ?",
+                options: ["CPU", "GPU", "RAM", "Disque dur SSD"],
+                correct: 1,
+                explanation: "Les GPU (cartes graphiques) sont privilégiés pour l'entraînement d'IA car ils excellent dans les calculs parallèles massifs, essentiels pour les réseaux de neurones."
+            },
+            {
+                question: "Qu'est-ce qu'un réseau de neurones artificiels ?",
+                options: ["Un câble électrique", "Un modèle inspiré du cerveau humain", "Un type d'internet", "Un algorithme de tri"],
+                correct: 1,
+                explanation: "Un réseau de neurones artificiels est un modèle mathématique inspiré du fonctionnement des neurones biologiques, composé de couches interconnectées qui traitent l'information."
+            },
+            {
+                question: "Quel est le principal risque écologique de l'IA ?",
+                options: ["Pollution de l'eau", "Consommation énergétique élevée", "Déforestation directe", "Production de déchets nucléaires"],
+                correct: 1,
+                explanation: "L'entraînement et l'utilisation des modèles d'IA nécessitent d'énormes quantités d'électricité, ce qui entraîne une empreinte carbone significative."
+            },
+            {
+                question: "Qu'est-ce que le Deep Learning ?",
+                options: ["Apprentissage en profondeur avec réseaux multicouches", "Apprentissage sous l'eau", "Lecture approfondie", "Formation intensive"],
+                correct: 0,
+                explanation: "Le Deep Learning (apprentissage profond) utilise des réseaux de neurones avec de nombreuses couches pour apprendre des représentations complexes à partir des données."
+            },
+            {
+                question: "Quelle entreprise a développé AlphaGo, l'IA qui a battu le champion du monde de Go ?",
+                options: ["OpenAI", "Google DeepMind", "Microsoft", "Meta"],
+                correct: 1,
+                explanation: "AlphaGo a été développé par DeepMind, une filiale de Google (maintenant Google DeepMind), et a battu le champion Lee Sedol en 2016."
+            },
+            {
+                question: "Qu'est-ce qu'un LLM (Large Language Model) ?",
+                options: ["Un langage de programmation", "Un grand modèle de langage", "Un système d'exploitation", "Une base de données"],
+                correct: 1,
+                explanation: "Un LLM est un grand modèle de langage entraîné sur d'énormes quantités de texte pour comprendre et générer du langage naturel. GPT, Claude et Gemini sont des exemples de LLM."
+            },
+            {
+                question: "Quel pourcentage de l'électricité mondiale est consommé par les data centers ?",
+                options: ["0.1-0.5%", "1-2%", "5-10%", "15-20%"],
+                correct: 1,
+                explanation: "Les data centers consomment environ 1 à 2% de l'électricité mondiale, et cette proportion augmente avec l'expansion de l'IA et du cloud computing."
+            },
+            {
+                question: "Qu'est-ce que l'apprentissage par transfert (Transfer Learning) ?",
+                options: ["Transférer des fichiers", "Réutiliser un modèle pré-entraîné", "Copier des données", "Changer d'ordinateur"],
+                correct: 1,
+                explanation: "L'apprentissage par transfert consiste à utiliser un modèle déjà entraîné sur une tâche et l'adapter à une nouvelle tâche similaire, économisant temps et ressources."
+            },
+            {
+                question: "Quel outil d'IA est spécialisé dans la génération d'images ?",
+                options: ["ChatGPT", "DALL-E", "Whisper", "AlphaFold"],
+                correct: 1,
+                explanation: "DALL-E est un modèle d'IA développé par OpenAI spécialisé dans la génération d'images à partir de descriptions textuelles."
+            },
+            {
+                question: "Qu'est-ce qu'un TPU ?",
+                options: ["Type Processing Unit", "Tensor Processing Unit", "Text Processing Unit", "Time Processing Unit"],
+                correct: 1,
+                explanation: "TPU (Tensor Processing Unit) est une puce spécialisée développée par Google spécifiquement pour accélérer les calculs d'apprentissage automatique."
+            },
+            {
+                question: "Dans quel domaine l'IA AlphaFold a-t-elle révolutionné la recherche ?",
+                options: ["Jeux vidéo", "Prédiction de structures protéiques", "Conduite autonome", "Traduction linguistique"],
+                correct: 1,
+                explanation: "AlphaFold, développé par DeepMind, a révolutionné la biologie en prédisant avec précision la structure 3D des protéines, un problème qui défiait les scientifiques depuis 50 ans."
+            },
+            {
+                question: "Qu'est-ce que l'overfitting en machine learning ?",
+                options: ["Entraînement trop long", "Le modèle mémorise les données d'entraînement", "Ordinateur surchauffé", "Trop de données"],
+                correct: 1,
+                explanation: "L'overfitting (sur-apprentissage) survient quand un modèle s'adapte trop aux données d'entraînement et perd sa capacité à généraliser sur de nouvelles données."
+            },
+            {
+                question: "Quel est le rôle d'un chatbot ?",
+                options: ["Jouer aux échecs", "Converser avec des humains", "Créer des images", "Composer de la musique"],
+                correct: 1,
+                explanation: "Un chatbot est un programme conversationnel conçu pour dialoguer avec des humains via texte ou voix, simulant une conversation naturelle."
+            },
+            {
+                question: "Qu'est-ce que le NLP (Natural Language Processing) ?",
+                options: ["Nouveau Langage de Programmation", "Traitement du Langage Naturel", "Niveau de Performance", "Nettoyage de Données"],
+                correct: 1,
+                explanation: "Le NLP (Traitement du Langage Naturel) est un domaine de l'IA qui permet aux machines de comprendre, interpréter et générer le langage humain."
+            },
+            {
+                question: "Quel est l'objectif principal de l'apprentissage par renforcement ?",
+                options: ["Apprendre par récompenses et pénalités", "Mémoriser des données", "Copier des humains", "Calculer plus vite"],
+                correct: 0,
+                explanation: "L'apprentissage par renforcement entraîne un agent à prendre des décisions en maximisant des récompenses cumulatives à travers des essais et erreurs."
+            },
+            {
+                question: "Qu'est-ce qu'un algorithme de recommandation ?",
+                options: ["Un système qui suggère du contenu personnalisé", "Un logiciel antivirus", "Un outil de compression", "Un éditeur de texte"],
+                correct: 0,
+                explanation: "Les algorithmes de recommandation analysent les préférences et comportements des utilisateurs pour suggérer du contenu pertinent (Netflix, YouTube, Amazon, etc.)."
+            },
+            {
+                question: "Quelle technique permet à une IA de reconnaître des objets dans des images ?",
+                options: ["Vision par ordinateur", "Écoute numérique", "Lecture de texte", "Calcul matriciel"],
+                correct: 0,
+                explanation: "La vision par ordinateur utilise des réseaux de neurones convolutifs pour analyser et identifier des objets, visages, scènes dans des images et vidéos."
+            },
+            {
+                question: "Qu'est-ce que l'IA générative ?",
+                options: ["IA qui crée du nouveau contenu", "IA qui détruit des données", "IA qui copie uniquement", "IA qui calcule"],
+                correct: 0,
+                explanation: "L'IA générative crée du nouveau contenu (texte, images, audio, vidéo) en apprenant les patterns des données d'entraînement. ChatGPT et DALL-E sont des exemples."
+            },
+            {
+                question: "Quel est le principal avantage du cloud computing pour l'IA ?",
+                options: ["Accès à une puissance de calcul massive", "Coût gratuit", "Pas besoin d'internet", "Installation rapide"],
+                correct: 0,
+                explanation: "Le cloud permet d'accéder à des ressources de calcul quasi illimitées (GPU, TPU) sans investir dans du matériel coûteux, idéal pour l'entraînement d'IA."
+            },
+            {
+                question: "Qu'est-ce qu'un dataset (jeu de données) ?",
+                options: ["Une collection de données pour entraîner l'IA", "Un jeu vidéo", "Un type de réseau", "Un langage de programmation"],
+                correct: 0,
+                explanation: "Un dataset est un ensemble de données (images, textes, sons) utilisé pour entraîner, valider et tester des modèles d'apprentissage automatique."
+            },
+            {
+                question: "Quel outil d'IA est spécialisé dans la transcription audio ?",
+                options: ["GPT-4", "Whisper", "DALL-E", "Midjourney"],
+                correct: 1,
+                explanation: "Whisper, développé par OpenAI, est un système de reconnaissance vocale automatique capable de transcrire et traduire l'audio en texte dans plusieurs langues."
+            },
+            {
+                question: "Qu'est-ce que l'Edge AI ?",
+                options: ["IA sur le cloud", "IA exécutée directement sur les appareils", "IA pour navigateurs web", "IA quantique"],
+                correct: 1,
+                explanation: "L'Edge AI exécute des modèles d'IA directement sur les appareils (smartphones, IoT) sans connexion cloud, réduisant latence et consommation de bande passante."
+            },
+            {
+                question: "Quelle est la principale différence entre IA faible et IA forte ?",
+                options: ["IA faible: tâche spécifique, IA forte: intelligence générale", "Puissance de calcul", "Coût de développement", "Langage de programmation"],
+                correct: 0,
+                explanation: "L'IA faible (narrow AI) excelle dans des tâches spécifiques. L'IA forte (AGI) n'existe pas encore et aurait une intelligence générale comparable à l'humain."
+            },
+            {
+                question: "Qu'est-ce que le biais algorithmique ?",
+                options: ["Erreur de programmation", "Discrimination involontaire dans les décisions de l'IA", "Bug informatique", "Erreur de calcul"],
+                correct: 1,
+                explanation: "Le biais algorithmique se produit quand une IA reproduit ou amplifie des préjugés présents dans ses données d'entraînement, menant à des décisions discriminatoires."
+            },
+            {
+                question: "Quelle entreprise a créé Claude, l'assistant IA conversationnel ?",
+                options: ["Google", "OpenAI", "Anthropic", "Meta"],
+                correct: 2,
+                explanation: "Claude a été développé par Anthropic, une entreprise fondée en 2021 et spécialisée dans la recherche en sécurité de l'IA."
+            },
+            {
+                question: "Qu'est-ce qu'un modèle multimodal ?",
+                options: ["Qui traite plusieurs types de données (texte, image, audio)", "Qui a plusieurs versions", "Qui fonctionne sur plusieurs ordinateurs", "Qui coûte cher"],
+                correct: 0,
+                explanation: "Un modèle multimodal peut traiter et comprendre différents types de données simultanément (texte, images, audio, vidéo). GPT-4V et Gemini sont multimodaux."
+            },
+            {
+                question: "Quel est l'objectif principal de l'IA éthique ?",
+                options: ["Maximiser les profits", "Développer une IA responsable et juste", "Accélérer les calculs", "Réduire les coûts"],
+                correct: 1,
+                explanation: "L'IA éthique vise à développer des systèmes d'IA qui respectent les valeurs humaines, sont équitables, transparents, et minimisent les risques sociétaux."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let answeredQuestions = new Set();
+
+        function initQuiz() {
+            const container = document.getElementById('questionsContainer');
+            questions.forEach((q, index) => {
+                const card = createQuestionCard(q, index);
+                container.appendChild(card);
+            });
+            updateStats();
+        }
+
+        function createQuestionCard(question, index) {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `question-${index}`;
+            
+            const letters = ['A', 'B', 'C', 'D'];
+            
+            card.innerHTML = `
+                <div class="question-header">
+                    <div class="question-number">Question ${index + 1}</div>
+                    <div class="question-text">${question.question}</div>
+                </div>
+                <div class="options">
+                    ${question.options.map((option, optIndex) => `
+                        <div class="option" onclick="selectAnswer(${index}, ${optIndex})">
+                            <div class="option-letter">${letters[optIndex]}</div>
+                            <div class="option-text">${option}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="explanation" id="explanation-${index}">
+                    <div class="explanation-title">💡 Explication</div>
+                    <div class="explanation-text">${question.explanation}</div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function selectAnswer(questionIndex, optionIndex) {
+            if (answeredQuestions.has(questionIndex)) return;
+            
+            const card = document.getElementById(`question-${questionIndex}`);
+            const options = card.querySelectorAll('.option');
+            const question = questions[questionIndex];
+            const isCorrect = optionIndex === question.correct;
+            
+            // Marquer comme répondue
+            answeredQuestions.add(questionIndex);
+            
+            // Désactiver toutes les options
+            options.forEach(opt => opt.classList.add('disabled'));
+            
+            // Marquer la réponse choisie
+            if (isCorrect) {
+                options[optionIndex].classList.add('correct');
+                card.classList.add('answered-correct');
+                correctAnswers++;
+            } else {
+                options[optionIndex].classList.add('incorrect');
+                options[question.correct].classList.add('correct');
+                card.classList.add('answered-incorrect');
+                incorrectAnswers++;
+            }
+            
+            // Afficher l'explication
+            document.getElementById(`explanation-${questionIndex}`).classList.add('show');
+            
+            // Mettre à jour les stats
+            updateStats();
+            
+            // Scroller doucement vers la prochaine question
+            setTimeout(() => {
+                if (questionIndex < questions.length - 1) {
+                    const nextCard = document.getElementById(`question-${questionIndex + 1}`);
+                    nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    // Quiz terminé
+                    showResults();
+                }
+            }, 1500);
+        }
+
+        function updateStats() {
+            const answered = answeredQuestions.size;
+            const total = questions.length;
+            const percentage = answered > 0 ? Math.round((correctAnswers / answered) * 100) : 0;
+            
+            document.getElementById('questionCounter').textContent = `${answered}/${total}`;
+            document.getElementById('correctCounter').textContent = correctAnswers;
+            document.getElementById('incorrectCounter').textContent = incorrectAnswers;
+            document.getElementById('scorePercent').textContent = `${percentage}%`;
+            
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = `${(answered / total) * 100}%`;
+        }
+
+        function showResults() {
+            setTimeout(() => {
+                document.getElementById('resultsCard').classList.add('show');
+                const score = Math.round((correctAnswers / questions.length) * 100);
+                document.getElementById('finalScore').textContent = `${score}%`;
+                document.getElementById('finalCorrect').textContent = correctAnswers;
+                document.getElementById('finalIncorrect').textContent = incorrectAnswers;
+                
+                // Scroller vers les résultats
+                document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 1000);
+        }
+
+        // Initialiser le quiz au chargement
+        document.addEventListener('DOMContentLoaded', initQuiz);
+    </script>
+</body>
+</html>

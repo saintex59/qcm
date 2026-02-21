@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCM : Arnaques sur Internet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            background: #f0f0f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 30px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .quiz-content {
+            padding: 30px;
+        }
+
+        .question-card {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            display: none;
+        }
+
+        .question-card.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .question-number {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .question-text {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 1em;
+        }
+
+        .option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .option.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .explanation {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .explanation.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .explanation strong {
+            color: #2196F3;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            margin: 30px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .score-number {
+            position: relative;
+            z-index: 1;
+        }
+
+        .score-label {
+            position: relative;
+            z-index: 1;
+            font-size: 0.3em;
+            margin-top: 5px;
+        }
+
+        .results h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .results p {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .review-section {
+            text-align: left;
+            margin-top: 30px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .review-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .review-item.correct {
+            border-left: 4px solid #28a745;
+        }
+
+        .review-item.incorrect {
+            border-left: 4px solid #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .question-text {
+                font-size: 1em;
+            }
+
+            .navigation {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ QCM : Arnaques sur Internet</h1>
+            <p>Testez vos connaissances sur la cybersécurité</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="quiz-content" id="quizContent">
+            <!-- Les questions seront générées ici -->
+        </div>
+
+        <div class="results" id="results">
+            <h2>Résultats du QCM</h2>
+            <div class="score-circle">
+                <div class="score-number" id="scoreNumber">0</div>
+                <div class="score-label">/ 30</div>
+            </div>
+            <p id="scoreMessage"></p>
+            <button class="btn btn-primary" onclick="restartQuiz()">🔄 Recommencer</button>
+            <div class="review-section" id="reviewSection"></div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                id: 1,
+                text: "Un message vous dit : « Votre ordinateur est infecté, cliquez ici pour réparer ». Que faire ?",
+                options: ["Cliquer rapidement", "Ignorer et fermer la fenêtre", "Redémarrer l'ordinateur", "Appeler le numéro indiqué"],
+                correct: 1,
+                explanation: "Les messages alarmants invitant à cliquer sont presque toujours des arnaques."
+            },
+            {
+                id: 2,
+                text: "Un e-mail vous demande votre mot de passe pour « vérification ». Que faire ?",
+                options: ["Répondre", "Donner un faux mot de passe", "Supprimer", "Téléphoner"],
+                correct: 2,
+                explanation: "Une vraie organisation ne demandera jamais un mot de passe par e-mail."
+            },
+            {
+                id: 3,
+                text: "Quel signe indique souvent un e-mail frauduleux ?",
+                options: ["Faute d'orthographe", "Belle image", "Signature longue", "Ton poli"],
+                correct: 0,
+                explanation: "Les fraudeurs font souvent des fautes."
+            },
+            {
+                id: 4,
+                text: "Quel est le risque principal d'un lien suspect dans un e-mail ?",
+                options: ["Fermer le navigateur", "Installer un virus", "Ralentir l'ordinateur", "Rien"],
+                correct: 1,
+                explanation: "Un lien frauduleux peut installer un virus."
+            },
+            {
+                id: 5,
+                text: "Votre banque vous demande vos identifiants par e-mail. Que faire ?",
+                options: ["Répondre vite", "Appeler le numéro", "Ne jamais répondre", "Cliquer"],
+                correct: 2,
+                explanation: "Les banques ne demandent jamais d'identifiants par e-mail."
+            },
+            {
+                id: 6,
+                text: "Que signifie le cadenas dans la barre d'adresse d'un site ?",
+                options: ["Sécurité totale", "Connexion chiffrée", "Site officiel", "Gratuit"],
+                correct: 1,
+                explanation: "Le cadenas signifie que la connexion est chiffrée, pas que le site est fiable."
+            },
+            {
+                id: 7,
+                text: "Une fenêtre apparaît : « Appeler Microsoft pour débloquer votre PC ». C'est…",
+                options: ["Vraie alerte", "Publicité", "Arnaque fréquente", "Mise à jour"],
+                correct: 2,
+                explanation: "Microsoft ne demande jamais d'appeler par pop-up."
+            },
+            {
+                id: 8,
+                text: "Quel est le meilleur mot de passe ?",
+                options: ["123456", "Prénom enfant", "Date naissance", "Mot de passe long"],
+                correct: 3,
+                explanation: "Un mot de passe doit être long et complexe."
+            },
+            {
+                id: 9,
+                text: "Quel est le bon comportement face à une pièce jointe inattendue ?",
+                options: ["Ouvrir", "Vérifier l'expéditeur", "Répondre", "Télécharger"],
+                correct: 1,
+                explanation: "Toujours vérifier l'expéditeur."
+            },
+            {
+                id: 10,
+                text: "Sur Facebook, une \"amie\" vous demande de l'argent en urgence. Que faire ?",
+                options: ["Envoyer argent", "Demander adresse", "Appeler la personne", "Signaler"],
+                correct: 2,
+                explanation: "Les comptes peuvent être piratés."
+            },
+            {
+                id: 11,
+                text: "Que signifie « phishing » ?",
+                options: ["Vidage disque", "Vol de données", "Espionnage", "Piratage Wi-Fi"],
+                correct: 1,
+                explanation: "Phishing = vol de données."
+            },
+            {
+                id: 12,
+                text: "Un SMS « La Poste : votre colis est bloqué, cliquez ici ». Que faire ?",
+                options: ["Cliquer", "Ne pas cliquer", "Répondre", "Appeler"],
+                correct: 1,
+                explanation: "Ne jamais cliquer sur ce type de SMS."
+            },
+            {
+                id: 13,
+                text: "Un ami vous dit : « J'ai gagné un iPhone gratuitement ». C'est…",
+                options: ["Probable", "Rare", "Arnaque", "Bonne nouvelle"],
+                correct: 2,
+                explanation: "Les gains miraculeux sont des arnaques."
+            },
+            {
+                id: 14,
+                text: "Une publicité dit : « Votre retraite peut tripler avec ce placement miracle ! »",
+                options: ["Sûr", "Opportunité", "Souvent arnaque", "Vérifier"],
+                correct: 2,
+                explanation: "Les placements « miracles » sont frauduleux."
+            },
+            {
+                id: 15,
+                text: "Quel comportement est le plus sûr ?",
+                options: ["Même mot de passe", "Jamais maj", "Système à jour", "Anti-virus off"],
+                correct: 2,
+                explanation: "Les mises à jour protègent."
+            },
+            {
+                id: 16,
+                text: "Vous recevez un e-mail de votre fournisseur avec un lien bizarre. Vous…",
+                options: ["Cliquer", "Payer", "Aller sur site officiel", "Répondre"],
+                correct: 2,
+                explanation: "Vérifier via le site officiel."
+            },
+            {
+                id: 17,
+                text: "Un ami vous envoie un message inhabituel en anglais avec un lien.",
+                options: ["Cliquer", "Supprimer", "Contacter autrement", "Répondre"],
+                correct: 2,
+                explanation: "Le compte peut être piraté."
+            },
+            {
+                id: 18,
+                text: "Une fenêtre dit : « Vous avez gagné 500 000 € ! »",
+                options: ["Cliquer", "Envoyer infos", "Fermer", "Signer"],
+                correct: 2,
+                explanation: "Les gains énormes sont faux."
+            },
+            {
+                id: 19,
+                text: "Quel est un signe d'un site frauduleux ?",
+                options: ["Fautes", "Logo coloré", "Prix normaux", "Description longue"],
+                correct: 0,
+                explanation: "Les fautes révèlent souvent une fraude."
+            },
+            {
+                id: 20,
+                text: "Un support technique vous demande d'installer un logiciel de prise de contrôle.",
+                options: ["Accepter", "Seulement si vous l'avez appelé", "Site joli", "Parle français"],
+                correct: 1,
+                explanation: "N'acceptez que si vous avez vous-même appelé le support."
+            },
+            {
+                id: 21,
+                text: "« Pour récupérer votre colis, payez 2 € ». C'est souvent…",
+                options: ["Vraie procédure", "Arnaque colis", "Taxe", "Bonne affaire"],
+                correct: 1,
+                explanation: "Arnaque colis très fréquente."
+            },
+            {
+                id: 22,
+                text: "Quel comportement réduit fortement les risques ?",
+                options: ["Ouvrir tout", "Vérifier adresse site", "Tout télécharger", "Ignorer maj"],
+                correct: 1,
+                explanation: "Vérifier l'adresse du site."
+            },
+            {
+                id: 23,
+                text: "Votre antivirus expire. Une fenêtre inconnue propose d'en installer un nouveau.",
+                options: ["Accepter", "Chercher", "Site officiel", "Ignorer"],
+                correct: 2,
+                explanation: "Toujours passer par le site officiel."
+            },
+            {
+                id: 24,
+                text: "Peut-on faire confiance aux numéros affichés dans une pop-up ?",
+                options: ["Oui toujours", "La nuit", "Souvent frauduleux", "Oui si logo connu"],
+                correct: 2,
+                explanation: "Numéros affichés = souvent arnaques."
+            },
+            {
+                id: 25,
+                text: "Un e-mail \"impôts\" provenant d'une adresse @gmail.com est…",
+                options: ["Normal", "Suspect", "Agréable", "Promotion"],
+                correct: 1,
+                explanation: "L'administration n'utilise pas Gmail."
+            },
+            {
+                id: 26,
+                text: "Bon réflexe après avoir cliqué sur un lien frauduleux ?",
+                options: ["Éteindre écran", "Ignorer", "Changer mot de passe", "Appeler numéro"],
+                correct: 2,
+                explanation: "Changer son mot de passe."
+            },
+            {
+                id: 27,
+                text: "On vous demande votre carte d'identité par mail.",
+                options: ["Jamais", "Toujours", "Aux inconnus", "Si urgent"],
+                correct: 0,
+                explanation: "Ne jamais envoyer une pièce d'identité."
+            },
+            {
+                id: 28,
+                text: "Un site propose un produit très cher à prix ridiculement bas.",
+                options: ["Bonne affaire", "Promo", "Faux site", "Produit neuf"],
+                correct: 2,
+                explanation: "Faux sites de vente."
+            },
+            {
+                id: 29,
+                text: "Un site demande votre carte bancaire « pour vérifier votre âge ».",
+                options: ["Normal", "Dangereux", "Amusant", "Obligatoire"],
+                correct: 1,
+                explanation: "Danger absolu."
+            },
+            {
+                id: 30,
+                text: "Le meilleur conseil pour éviter les arnaques ?",
+                options: ["Ne jamais utiliser Internet", "Vérifier liens", "Faire confiance", "Installer programmes"],
+                correct: 1,
+                explanation: "Toujours vérifier expéditeurs et liens."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let userAnswers = [];
+
+        function initQuiz() {
+            renderQuestion();
+            updateProgress();
+        }
+
+        function renderQuestion() {
+            const quizContent = document.getElementById('quizContent');
+            const question = questions[currentQuestion];
+            
+            let optionsHTML = '';
+            question.options.forEach((option, index) => {
+                optionsHTML += `
+                    <div class="option" onclick="selectOption(${index})">
+                        <input type="radio" name="question${question.id}" id="option${index}" value="${index}">
+                        <label for="option${index}">${String.fromCharCode(65 + index)}. ${option}</label>
+                    </div>
+                `;
+            });
+
+            quizContent.innerHTML = `
+                <div class="question-card active">
+                    <div class="question-header">
+                        <span class="question-number">Question ${currentQuestion + 1} / ${questions.length}</span>
+                    </div>
+                    <div class="question-text">${question.text}</div>
+                    <div class="options">
+                        ${optionsHTML}
+                    </div>
+                    <div class="explanation" id="explanation">
+                        <strong>💡 Explication :</strong> ${question.explanation}
+                    </div>
+                    <div class="navigation">
+                        <button class="btn btn-secondary" onclick="previousQuestion()" ${currentQuestion === 0 ? 'disabled' : ''}>
+                            ← Précédent
+                        </button>
+                        <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>
+                            ${currentQuestion === questions.length - 1 ? 'Terminer ✓' : 'Suivant →'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectOption(index) {
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[index].classList.add('selected');
+            
+            document.getElementById(`option${index}`).checked = true;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            const selectedOption = document.querySelector('input[name="question' + questions[currentQuestion].id + '"]:checked');
+            
+            if (!selectedOption) {
+                alert('Veuillez sélectionner une réponse');
+                return;
+            }
+
+            const selectedIndex = parseInt(selectedOption.value);
+            userAnswers[currentQuestion] = selectedIndex;
+
+            // Afficher la correction
+            const options = document.querySelectorAll('.option');
+            const correctIndex = questions[currentQuestion].correct;
+            
+            options[correctIndex].classList.add('correct');
+            if (selectedIndex !== correctIndex) {
+                options[selectedIndex].classList.add('incorrect');
+            } else {
+                score++;
+            }
+
+            document.getElementById('explanation').classList.add('show');
+            document.getElementById('nextBtn').textContent = currentQuestion === questions.length - 1 ? 'Voir résultats ✓' : 'Question suivante →';
+            document.getElementById('nextBtn').onclick = function() {
+                if (currentQuestion < questions.length - 1) {
+                    currentQuestion++;
+                    renderQuestion();
+                    updateProgress();
+                } else {
+                    showResults();
+                }
+            };
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                renderQuestion();
+                updateProgress();
+                
+                if (userAnswers[currentQuestion] !== undefined) {
+                    setTimeout(() => {
+                        document.getElementById(`option${userAnswers[currentQuestion]}`).checked = true;
+                        document.getElementById('nextBtn').disabled = false;
+                    }, 100);
+                }
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function showResults() {
+            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('results').classList.add('show');
+            document.getElementById('scoreNumber').textContent = score;
+
+            let message = '';
+            const percentage = (score / questions.length) * 100;
+
+            if (percentage >= 90) {
+                message = '🏆 Excellent ! Vous êtes un expert en cybersécurité !';
+            } else if (percentage >= 75) {
+                message = '✅ Très bien ! Vous avez de bonnes connaissances.';
+            } else if (percentage >= 60) {
+                message = '👍 Bien ! Continuez à vous informer sur la sécurité.';
+            } else if (percentage >= 50) {
+                message = '⚠️ Passable. Soyez plus vigilant en ligne.';
+            } else {
+                message = '❌ Attention ! Renforcez vos connaissances en cybersécurité.';
+            }
+
+            document.getElementById('scoreMessage').textContent = message;
+
+            // Afficher le récapitulatif
+            let reviewHTML = '<h3>📋 Récapitulatif de vos réponses</h3>';
+            questions.forEach((q, index) => {
+                const isCorrect = userAnswers[index] === q.correct;
+                reviewHTML += `
+                    <div class="review-item ${isCorrect ? 'correct' : 'incorrect'}">
+                        <strong>Q${index + 1}:</strong> ${q.text}<br>
+                        <small>${isCorrect ? '✓' : '✗'} Votre réponse: ${q.options[userAnswers[index]]}</small><br>
+                        ${!isCorrect ? `<small>✓ Bonne réponse: ${q.options[q.correct]}</small><br>` : ''}
+                        <small><em>${q.explanation}</em></small>
+                    </div>
+                `;
+            });
+
+            document.getElementById('reviewSection').innerHTML = reviewHTML;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            userAnswers = [];
+            document.getElementById('quizContent').style.display = 'block';
+            document.getElementById('results').classList.remove('show');
+            initQuiz();
+        }
+
+        // Initialiser le quiz au chargement
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>

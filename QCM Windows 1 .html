@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCM Windows - Quiz Interactif</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #06b6d4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(37, 99, 235, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        h1 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 3.5rem;
+            font-weight: 400;
+            font-style: italic;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .progress-container {
+            background: var(--surface);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--surface-light);
+            animation: slideInLeft 0.8s ease 0.2s both;
+        }
+
+        .progress-bar-bg {
+            background: var(--surface-light);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            height: 100%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .question-card {
+            background: var(--surface);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--surface-light);
+            animation: fadeInUp 0.6s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .question-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .question-number {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .question-text {
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .option {
+            background: var(--surface-light);
+            border: 2px solid transparent;
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .option:hover {
+            background: rgba(37, 99, 235, 0.1);
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .option-letter {
+            background: var(--bg);
+            color: var(--accent);
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .option.selected {
+            background: rgba(37, 99, 235, 0.2);
+            border-color: var(--primary);
+        }
+
+        .option.correct {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--success);
+            animation: pulse 0.6s ease;
+        }
+
+        .option.incorrect {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--error);
+            animation: shake 0.5s ease;
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .explanation {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: rgba(6, 182, 212, 0.1);
+            border-left: 4px solid var(--accent);
+            border-radius: 0.5rem;
+            animation: slideDown 0.4s ease;
+        }
+
+        .explanation-title {
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .navigation {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: var(--surface-light);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--surface-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface);
+        }
+
+        .results {
+            background: var(--surface);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            text-align: center;
+            border: 1px solid var(--surface-light);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .results h2 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .score {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 1rem 0;
+            background: linear-gradient(135deg, var(--success), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .score-message {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat {
+            background: var(--surface-light);
+            padding: 1.5rem;
+            border-radius: 1rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .question-card {
+                padding: 1.5rem;
+            }
+            
+            .results {
+                padding: 2rem;
+            }
+            
+            .score {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>QCM Windows</h1>
+            <p class="subtitle">Quiz Interactif • 30 Questions</p>
+        </header>
+
+        <div id="quiz-container">
+            <div class="progress-container">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <div class="progress-info">
+                    <span id="progress-text">Question 1 sur 30</span>
+                    <span id="score-text">Score: 0/0</span>
+                </div>
+            </div>
+
+            <div id="question-container"></div>
+
+            <div class="navigation">
+                <button id="prev-btn" class="btn-secondary" onclick="previousQuestion()">← Précédent</button>
+                <button id="next-btn" onclick="nextQuestion()">Suivant →</button>
+            </div>
+        </div>
+
+        <div id="results-container" class="hidden"></div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Quelle est la principale fonction du menu Démarrer ?",
+                options: [
+                    "Fermer Windows",
+                    "Accéder aux programmes et paramètres",
+                    "Ouvrir le navigateur",
+                    "Supprimer des fichiers"
+                ],
+                correct: 1,
+                explanation: "Le menu Démarrer centralise l'accès aux applications, paramètres et fichiers, facilitant la navigation dans le système."
+            },
+            {
+                question: "À quoi sert la barre des tâches ?",
+                options: [
+                    "Gérer les fichiers",
+                    "Accéder au BIOS",
+                    "Afficher les applications ouvertes",
+                    "Modifier les thèmes"
+                ],
+                correct: 2,
+                explanation: "La barre des tâches affiche les programmes ouverts et offre un accès rapide au menu Démarrer et aux notifications."
+            },
+            {
+                question: "Quelle est l'utilité du Panneau de configuration ?",
+                options: [
+                    "Supprimer les applications",
+                    "Modifier les paramètres du système",
+                    "Éteindre l'ordinateur",
+                    "Lancer les jeux"
+                ],
+                correct: 1,
+                explanation: "Le Panneau de configuration permet de gérer les paramètres matériels et logiciels du système."
+            },
+            {
+                question: "Quelle est la principale fonction du Gestionnaire de périphériques ?",
+                options: [
+                    "Surveiller l'utilisation du processeur",
+                    "Installer, désactiver ou mettre à jour les pilotes matériels",
+                    "Supprimer les fichiers système",
+                    "Gérer les comptes utilisateurs"
+                ],
+                correct: 1,
+                explanation: "Le Gestionnaire de périphériques gère les pilotes matériels et permet d'assurer la compatibilité des composants."
+            },
+            {
+                question: "Que trouve-t-on dans la zone de notification ?",
+                options: [
+                    "Les fichiers récents",
+                    "L'heure, le volume et l'état réseau",
+                    "Les applications épinglées",
+                    "Le fond d'écran"
+                ],
+                correct: 1,
+                explanation: "La zone de notification affiche des informations système comme l'heure, le volume et la connectivité réseau."
+            },
+            {
+                question: "Comment accéder rapidement aux paramètres du système ?",
+                options: [
+                    "Menu Démarrer > Paramètres",
+                    "Clic droit sur le Bureau",
+                    "Ctrl + P",
+                    "Panneau de configuration > Jeux"
+                ],
+                correct: 0,
+                explanation: "Le menu Démarrer > Paramètres permet un accès rapide à la configuration du système et des comptes."
+            },
+            {
+                question: "À quoi sert l'explorateur de fichiers ?",
+                options: [
+                    "Modifier les paramètres réseau",
+                    "Gérer les fichiers et dossiers",
+                    "Installer des applications",
+                    "Éteindre l'ordinateur"
+                ],
+                correct: 1,
+                explanation: "L'explorateur de fichiers permet de gérer les fichiers et dossiers stockés sur l'ordinateur."
+            },
+            {
+                question: "Que représente le disque C: ?",
+                options: [
+                    "Un dossier temporaire",
+                    "Le disque système principal",
+                    "Une clé USB",
+                    "Le cache Internet"
+                ],
+                correct: 1,
+                explanation: "Le disque C: contient le système d'exploitation et les programmes installés."
+            },
+            {
+                question: "Quelle extension correspond à un fichier exécutable ?",
+                options: [
+                    ".txt",
+                    ".exe",
+                    ".jpg",
+                    ".mp3"
+                ],
+                correct: 1,
+                explanation: "L'extension .exe désigne les fichiers exécutables, utilisés pour lancer des applications."
+            },
+            {
+                question: "Comment afficher les fichiers cachés ?",
+                options: [
+                    "Dans le BIOS",
+                    "Dans l'explorateur > Affichage > Éléments masqués",
+                    "En redémarrant",
+                    "En changeant de thème"
+                ],
+                correct: 1,
+                explanation: "Les fichiers cachés peuvent être affichés depuis l'explorateur via l'onglet 'Affichage'."
+            },
+            {
+                question: "Que signifie le message 'Espace disque faible' ?",
+                options: [
+                    "Le disque est plein",
+                    "Il reste beaucoup de place",
+                    "Le disque est neuf",
+                    "Aucun risque"
+                ],
+                correct: 0,
+                explanation: "Le message 'Espace disque faible' signifie que le disque approche de sa limite de stockage."
+            },
+            {
+                question: "Quelle est la fonction principale de la Corbeille ?",
+                options: [
+                    "Supprimer définitivement les fichiers",
+                    "Permettre la restauration après suppression",
+                    "Crypter les fichiers",
+                    "Lancer un antivirus"
+                ],
+                correct: 1,
+                explanation: "La Corbeille conserve temporairement les fichiers supprimés avant suppression définitive."
+            },
+            {
+                question: "Qu'est-ce que le Wi-Fi ?",
+                options: [
+                    "Un câble réseau",
+                    "Une technologie sans fil de connexion",
+                    "Un navigateur Internet",
+                    "Une clé USB"
+                ],
+                correct: 1,
+                explanation: "Le Wi-Fi permet une connexion sans fil au réseau local ou à Internet."
+            },
+            {
+                question: "Où peut-on voir les connexions réseau actives ?",
+                options: [
+                    "Panneau de configuration > Réseau et Internet",
+                    "Explorateur de fichiers",
+                    "Bloc-notes",
+                    "Gestionnaire de tâches"
+                ],
+                correct: 0,
+                explanation: "Les connexions actives sont visibles via le Panneau de configuration > Réseau et Internet."
+            },
+            {
+                question: "À quoi sert le 'Centre Réseau et partage' de Windows ?",
+                options: [
+                    "À configurer les options d'affichage",
+                    "À gérer les connexions réseau et les paramètres de partage",
+                    "À créer des comptes locaux",
+                    "À installer les mises à jour Windows"
+                ],
+                correct: 1,
+                explanation: "Le Centre Réseau et partage permet de configurer les connexions réseau et le partage de fichiers."
+            },
+            {
+                question: "Quelle est la différence entre une adresse IP et un nom de domaine ?",
+                options: [
+                    "Aucune, ils servent à la même chose",
+                    "L'adresse IP identifie un appareil, le nom de domaine est plus facile à retenir pour l'utilisateur",
+                    "Le nom de domaine correspond à la carte réseau physique",
+                    "L'adresse IP n'est utilisée que sur Internet"
+                ],
+                correct: 1,
+                explanation: "Une adresse IP identifie un appareil, tandis qu'un nom de domaine est plus lisible pour l'utilisateur."
+            },
+            {
+                question: "Comment partager une imprimante sur un réseau local ?",
+                options: [
+                    "En modifiant le pare-feu",
+                    "Via le Centre Réseau et partage",
+                    "Par l'explorateur",
+                    "Avec Windows Defender"
+                ],
+                correct: 1,
+                explanation: "On partage une imprimante via le Centre Réseau et partage en activant le partage d'imprimante."
+            },
+            {
+                question: "Que représente le protocole Ethernet ?",
+                options: [
+                    "Un langage de programmation",
+                    "Une connexion filaire réseau",
+                    "Un antivirus",
+                    "Un périphérique audio"
+                ],
+                correct: 1,
+                explanation: "Ethernet est une technologie de connexion filaire utilisée dans les réseaux locaux."
+            },
+            {
+                question: "Pourquoi est-il important de protéger son compte Windows par un mot de passe ?",
+                options: [
+                    "Pour améliorer la vitesse",
+                    "Pour protéger les données personnelles",
+                    "Pour accéder plus vite au système",
+                    "Pour économiser de l'énergie"
+                ],
+                correct: 1,
+                explanation: "Un mot de passe empêche l'accès non autorisé au compte Windows et protège les données."
+            },
+            {
+                question: "Que signifie qu'un compte est 'administrateur' dans Windows ?",
+                options: [
+                    "Il ne peut pas installer de logiciels",
+                    "Il dispose de droits étendus pour gérer le système et les autres comptes",
+                    "Il est réservé aux enfants",
+                    "Il permet uniquement de naviguer sur Internet"
+                ],
+                correct: 1,
+                explanation: "Un compte administrateur permet de modifier les paramètres système et gérer d'autres comptes."
+            },
+            {
+                question: "Quel est le rôle de Windows Defender ?",
+                options: [
+                    "Sauvegarder les fichiers",
+                    "Protéger contre les virus et menaces",
+                    "Gérer le réseau",
+                    "Supprimer les pilotes"
+                ],
+                correct: 1,
+                explanation: "Windows Defender protège le système contre les virus et menaces."
+            },
+            {
+                question: "Pourquoi faut-il être prudent avec les fichiers .exe inconnus ?",
+                options: [
+                    "Ils prennent beaucoup de place",
+                    "Ils peuvent contenir des virus",
+                    "Ils ralentissent le Wi-Fi",
+                    "Ils suppriment la corbeille"
+                ],
+                correct: 1,
+                explanation: "Les fichiers .exe inconnus peuvent contenir des logiciels malveillants dangereux."
+            },
+            {
+                question: "Quelle est l'utilité du service OneDrive intégré à Windows ?",
+                options: [
+                    "Créer des points de restauration",
+                    "Sauvegarder et synchroniser les fichiers dans le cloud Microsoft",
+                    "Nettoyer automatiquement le disque dur",
+                    "Accélérer les mises à jour Windows"
+                ],
+                correct: 1,
+                explanation: "OneDrive sauvegarde et synchronise les fichiers dans le cloud Microsoft pour un accès partout."
+            },
+            {
+                question: "Pourquoi faut-il télécharger les logiciels depuis des sources fiables ?",
+                options: [
+                    "Pour éviter les virus",
+                    "Pour consommer moins de bande passante",
+                    "Pour gagner du temps",
+                    "Pour améliorer le son"
+                ],
+                correct: 0,
+                explanation: "Télécharger depuis des sources fiables évite les virus et logiciels indésirables."
+            },
+            {
+                question: "À quoi sert l'outil 'Défragmenteur et optimisation des lecteurs' ?",
+                options: [
+                    "Supprimer des fichiers",
+                    "Vérifier les mails",
+                    "Optimiser la performance du disque dur",
+                    "Créer des partitions"
+                ],
+                correct: 2,
+                explanation: "Le Défragmenteur optimise la répartition des fichiers pour améliorer la rapidité du disque."
+            },
+            {
+                question: "Quelle est la fonction de Windows Update ?",
+                options: [
+                    "Supprimer les fichiers temporaires",
+                    "Installer les mises à jour du système",
+                    "Créer des dossiers",
+                    "Modifier le fond d'écran"
+                ],
+                correct: 1,
+                explanation: "Windows Update met à jour le système et corrige les failles de sécurité."
+            },
+            {
+                question: "Pourquoi est-il important de redémarrer après une mise à jour ?",
+                options: [
+                    "Pour appliquer les changements du système",
+                    "Pour nettoyer le disque",
+                    "Pour économiser de l'énergie",
+                    "Pour afficher la météo"
+                ],
+                correct: 0,
+                explanation: "Redémarrer permet à Windows d'appliquer les mises à jour correctement."
+            },
+            {
+                question: "Quelle est la fonction de l'outil 'Nettoyage de disque' ?",
+                options: [
+                    "Supprimer les fichiers temporaires inutiles",
+                    "Installer des jeux",
+                    "Analyser le réseau",
+                    "Crypter les données"
+                ],
+                correct: 0,
+                explanation: "L'outil 'Nettoyage de disque' supprime les fichiers temporaires pour libérer de l'espace."
+            },
+            {
+                question: "Que permet la restauration du système ?",
+                options: [
+                    "Revenir à un état antérieur sans perdre ses fichiers",
+                    "Supprimer les applications",
+                    "Créer un compte invité",
+                    "Formater le disque dur"
+                ],
+                correct: 0,
+                explanation: "La restauration du système permet de revenir à un état stable sans perdre ses fichiers personnels."
+            },
+            {
+                question: "À quoi sert le Gestionnaire des tâches ?",
+                options: [
+                    "Fermer les programmes bloqués et surveiller les performances",
+                    "Créer des raccourcis",
+                    "Modifier le fond d'écran",
+                    "Copier des fichiers"
+                ],
+                correct: 0,
+                explanation: "Le Gestionnaire des tâches aide à surveiller les performances et fermer les applications bloquées."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let userAnswers = [];
+        let score = 0;
+
+        function renderQuestion() {
+            const q = quizData[currentQuestion];
+            const container = document.getElementById('question-container');
+            
+            const answered = userAnswers[currentQuestion] !== undefined;
+            const userAnswer = userAnswers[currentQuestion];
+            
+            let html = `
+                <div class="question-card">
+                    <span class="question-number">Question ${currentQuestion + 1}/30</span>
+                    <div class="question-text">${q.question}</div>
+                    <div class="options">
+            `;
+            
+            q.options.forEach((option, index) => {
+                let optionClass = 'option';
+                if (answered) {
+                    optionClass += ' disabled';
+                    if (index === userAnswer) {
+                        optionClass += ' selected';
+                    }
+                    if (index === q.correct) {
+                        optionClass += ' correct';
+                    } else if (index === userAnswer && userAnswer !== q.correct) {
+                        optionClass += ' incorrect';
+                    }
+                }
+                
+                html += `
+                    <div class="${optionClass}" onclick="selectAnswer(${index})">
+                        <div class="option-letter">${String.fromCharCode(65 + index)}</div>
+                        <div>${option}</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            if (answered) {
+                html += `
+                    <div class="explanation">
+                        <div class="explanation-title">💡 Explication</div>
+                        <div>${q.explanation}</div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+            
+            updateProgress();
+            updateButtons();
+        }
+
+        function selectAnswer(index) {
+            if (userAnswers[currentQuestion] !== undefined) return;
+            
+            userAnswers[currentQuestion] = index;
+            if (index === quizData[currentQuestion].correct) {
+                score++;
+            }
+            
+            renderQuestion();
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / quizData.length) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = `Question ${currentQuestion + 1} sur ${quizData.length}`;
+            
+            const answeredCount = userAnswers.filter(a => a !== undefined).length;
+            document.getElementById('score-text').textContent = `Score: ${score}/${answeredCount}`;
+        }
+
+        function updateButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.disabled = currentQuestion === 0;
+            
+            if (currentQuestion === quizData.length - 1) {
+                nextBtn.textContent = userAnswers[currentQuestion] !== undefined ? 'Voir les résultats 🎯' : 'Suivant →';
+                nextBtn.disabled = userAnswers[currentQuestion] === undefined;
+            } else {
+                nextBtn.textContent = 'Suivant →';
+                nextBtn.disabled = false;
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < quizData.length - 1) {
+                currentQuestion++;
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                renderQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            
+            const percentage = Math.round((score / quizData.length) * 100);
+            let message = '';
+            let emoji = '';
+            
+            if (percentage >= 90) {
+                message = "Excellent ! Vous maîtrisez Windows !";
+                emoji = "🏆";
+            } else if (percentage >= 70) {
+                message = "Très bien ! Bonne connaissance de Windows.";
+                emoji = "🎉";
+            } else if (percentage >= 50) {
+                message = "Pas mal ! Continuez à apprendre.";
+                emoji = "👍";
+            } else {
+                message = "Continuez vos efforts, vous allez progresser !";
+                emoji = "💪";
+            }
+            
+            const resultsHTML = `
+                <div class="results">
+                    <h2>Quiz Terminé ! ${emoji}</h2>
+                    <div class="score">${score}/${quizData.length}</div>
+                    <div class="score-message">${message}</div>
+                    
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-value" style="color: var(--success)">${score}</div>
+                            <div class="stat-label">Correctes</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" style="color: var(--error)">${quizData.length - score}</div>
+                            <div class="stat-label">Incorrectes</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" style="color: var(--accent)">${percentage}%</div>
+                            <div class="stat-label">Score</div>
+                        </div>
+                    </div>
+                    
+                    <div class="navigation">
+                        <button onclick="reviewAnswers()">📝 Revoir les réponses</button>
+                        <button onclick="restartQuiz()" class="btn-secondary">🔄 Recommencer</button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('results-container').innerHTML = resultsHTML;
+            document.getElementById('results-container').classList.remove('hidden');
+        }
+
+        function reviewAnswers() {
+            currentQuestion = 0;
+            document.getElementById('results-container').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            userAnswers = [];
+            score = 0;
+            document.getElementById('results-container').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        // Initialisation
+        renderQuestion();
+    </script>
+</body>
+</html>
