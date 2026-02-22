@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCM Barre des Taches </title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #050810;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Grille de fond */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(37,99,235,0.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(37,99,235,0.07) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        /* Halo lumineux */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%);
+            z-index: 0;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        .card {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 3.5rem 4rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 0 80px rgba(37,99,235,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(37,99,235,0.15);
+            border: 1px solid rgba(37,99,235,0.3);
+            border-radius: 100px;
+            padding: 6px 14px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #60a5fa;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        .badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #60a5fa;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #f1f5f9;
+            line-height: 1.2;
+            margin-bottom: 0.75rem;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+        }
+
+        .meta {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .meta-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .meta-label {
+            font-size: 0.72rem;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .divider {
+            width: 1px;
+            height: 36px;
+            background: rgba(255,255,255,0.08);
+            align-self: center;
+        }
+
+        /* Le bouton */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: white;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(37,99,235,0.4);
+            width: 100%;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(37,99,235,0.5);
+        }
+
+        .btn:hover::before { opacity: 1; }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 12px rgba(37,99,235,0.3);
+        }
+
+        /* Icône flèche */
+        .btn svg {
+            transition: transform 0.25s ease;
+        }
+        .btn:hover svg {
+            transform: translateX(3px);
+        }
+
+        .hint {
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: #334155;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="badge">QCM Interactif</div>
+        <h1>Barre<br><span>Des</span>Taches</span></h1>
+        <p class="subtitle">Testez vos connaissances sur la barre des taches de Windows</p>
+
+        <div class="meta">
+            <div class="meta-item">
+                <span class="meta-value">30</span>
+                <span class="meta-label">Questions</span>
+            </div>
+            <div class="divider"></div>
+            <div class="meta-item">
+                <span class="meta-value">~15</span>
+                <span class="meta-label">Minutes</span>
+            </div>
+            <div class="divider"></div>
+            <div class="meta-item">
+                <span class="meta-value">A2</span>
+                <span class="meta-label">Niveau</span>
+            </div>
+        </div>
+
+        <a class="btn" href="QCM/QCM_Barre_des_taches.html" target="_blank" rel="noopener">
+            Démarrer le QCM
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+        </a>
+        <p class="hint">S'ouvre dans un nouvel onglet</p>
+    </div>
+</body>
+</html>
