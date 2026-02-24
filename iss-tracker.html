@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISS — Passages au-dessus de vous</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #020a14;
+    --bg2: #040f1e;
+    --panel: rgba(4, 20, 42, 0.85);
+    --border: rgba(0, 200, 255, 0.18);
+    --teal: #00c8ff;
+    --teal-dim: rgba(0, 200, 255, 0.15);
+    --teal-glow: rgba(0, 200, 255, 0.4);
+    --green: #00ff88;
+    --green-dim: rgba(0, 255, 136, 0.12);
+    --amber: #ffb300;
+    --red: #ff4466;
+    --text: #c8e8ff;
+    --text-dim: #4a7090;
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'Orbitron', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── starfield canvas ── */
+  #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  /* ── layout ── */
+  .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  /* ── header ── */
+  header {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; margin-bottom: 36px; text-align: center;
+  }
+  .iss-icon {
+    width: 72px; height: 72px; margin-bottom: 4px;
+    animation: orbit 20s linear infinite;
+    filter: drop-shadow(0 0 12px var(--teal));
+  }
+  @keyframes orbit { from { transform: rotate(0deg) translateX(4px) rotate(0deg); }
+                      to   { transform: rotate(360deg) translateX(4px) rotate(-360deg); } }
+  h1 {
+    font-family: var(--display); font-size: clamp(1.4rem, 4vw, 2.2rem);
+    font-weight: 900; letter-spacing: 0.12em;
+    color: #fff;
+    text-shadow: 0 0 30px var(--teal-glow), 0 0 60px rgba(0,200,255,0.2);
+  }
+  .subtitle { font-size: 0.78rem; color: var(--text-dim); letter-spacing: 0.25em; text-transform: uppercase; }
+
+  /* ── location card ── */
+  .loc-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(8px);
+  }
+  .loc-card h2 {
+    font-family: var(--display); font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.3em; color: var(--teal); text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .loc-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .coord-box {
+    display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px;
+  }
+  .coord-box label { font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.2em; text-transform: uppercase; }
+  .coord-box input {
+    background: rgba(0,200,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--teal);
+    font-family: var(--mono);
+    font-size: 1rem;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    width: 100%;
+  }
+  .coord-box input:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 12px var(--teal-dim);
+  }
+  .btn {
+    font-family: var(--display); font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 12px 22px; border: none; border-radius: 8px;
+    cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .btn-geo {
+    background: var(--teal-dim); border: 1px solid var(--teal);
+    color: var(--teal);
+  }
+  .btn-geo:hover { background: rgba(0,200,255,0.25); box-shadow: 0 0 20px var(--teal-dim); }
+  .btn-calc {
+    background: linear-gradient(135deg, rgba(0,200,255,0.2), rgba(0,200,255,0.05));
+    border: 1px solid var(--teal); color: #fff;
+    box-shadow: 0 0 20px var(--teal-dim);
+  }
+  .btn-calc:hover { background: rgba(0,200,255,0.3); box-shadow: 0 0 30px var(--teal-glow); }
+  .btn-calc:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+
+  /* ── status bar ── */
+  #status-bar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.75rem; color: var(--text-dim); min-height: 28px;
+    margin-bottom: 20px; padding: 0 4px;
+  }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; }
+  .status-dot.ok { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+  .status-dot.err { background: var(--red); }
+  .status-dot.loading { background: var(--amber); animation: blink .6s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── ISS live position ── */
+  #iss-now {
+    display: none;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+  }
+  .live-item { display: flex; flex-direction: column; gap: 3px; }
+  .live-item .lbl { font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.22em; text-transform: uppercase; }
+  .live-item .val {
+    font-family: var(--display); font-size: 0.95rem; font-weight: 700;
+    color: var(--green);
+    text-shadow: 0 0 10px rgba(0,255,136,0.4);
+  }
+  .live-item .val.teal { color: var(--teal); text-shadow: 0 0 10px var(--teal-dim); }
+  .live-item .val.amber { color: var(--amber); text-shadow: 0 0 10px rgba(255,179,0,0.3); }
+
+  /* ── passes list ── */
+  #passes-section { display: none; }
+  #passes-section h2 {
+    font-family: var(--display); font-size: 0.72rem; font-weight: 700;
+    color: var(--teal); letter-spacing: 0.3em; text-transform: uppercase;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+  }
+  #passes-section h2::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .pass-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px 20px;
+    align-items: center;
+    transition: border-color .2s, box-shadow .2s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+  .pass-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--teal);
+    opacity: 0.6;
+  }
+  .pass-card.good::before { background: var(--green); opacity: 1; }
+  .pass-card.fair::before { background: var(--amber); }
+  .pass-card.poor::before { background: var(--text-dim); }
+  .pass-card:hover { border-color: rgba(0,200,255,0.35); box-shadow: 0 0 24px rgba(0,200,255,0.08); }
+
+  .pass-num {
+    font-family: var(--display); font-size: 1.6rem; font-weight: 900;
+    color: var(--text-dim); line-height: 1; min-width: 32px;
+    text-align: center;
+  }
+  .pass-card.good .pass-num { color: var(--green); text-shadow: 0 0 15px rgba(0,255,136,0.4); }
+  .pass-card.fair .pass-num { color: var(--amber); }
+
+  .pass-body { display: flex; flex-direction: column; gap: 8px; }
+  .pass-date { font-family: var(--display); font-size: 0.82rem; font-weight: 700; color: #fff; letter-spacing: 0.05em; }
+  .pass-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+  .meta-chip {
+    display: flex; gap: 5px; align-items: center;
+    font-size: 0.7rem; color: var(--text-dim);
+  }
+  .meta-chip span { color: var(--text); font-size: 0.78rem; }
+  .meta-chip .label { color: var(--text-dim); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.15em; }
+
+  .pass-elevation {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .elev-arc {
+    width: 54px; height: 28px; position: relative;
+  }
+  .elev-arc svg { width: 100%; height: 100%; }
+  .elev-label {
+    font-family: var(--display); font-size: 0.75rem; font-weight: 700;
+    text-align: center;
+  }
+  .elev-label.good { color: var(--green); }
+  .elev-label.fair { color: var(--amber); }
+  .elev-label.poor { color: var(--text-dim); }
+
+  .timer-badge {
+    grid-column: 1 / -1;
+    font-size: 0.68rem; color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    padding-top: 8px; margin-top: 2px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .timer-badge .countdown { color: var(--teal); font-family: var(--display); font-size: 0.75rem; }
+  .timer-badge .countdown.soon { color: var(--green); font-weight: 700; text-shadow: 0 0 10px rgba(0,255,136,0.5); animation: pulse 1s infinite; }
+
+  /* ── visibility legend ── */
+  .legend {
+    display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
+    font-size: 0.68rem; color: var(--text-dim);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ── error & empty states ── */
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+    color: var(--text-dim); font-size: 0.85rem;
+  }
+  .empty-state .big { font-family: var(--display); font-size: 2.5rem; opacity: .15; margin-bottom: 12px; }
+
+  /* ── sky compass (minimal polar plot) ── */
+  .sky-compass { display: flex; justify-content: center; margin: 8px 0 4px; }
+  .sky-compass svg text { font-family: var(--mono); }
+
+  /* ── footer ── */
+  footer {
+    text-align: center; font-size: 0.65rem; color: var(--text-dim);
+    margin-top: 48px; line-height: 1.8;
+  }
+  footer a { color: var(--teal); text-decoration: none; }
+
+  /* ── scan line overlay ── */
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+    background: repeating-linear-gradient(to bottom, transparent 0, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="wrap">
+
+  <header>
+    <!-- ISS SVG icon -->
+    <svg class="iss-icon" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Solar panel left -->
+      <rect x="2" y="30" width="22" height="12" rx="2" fill="none" stroke="#00c8ff" stroke-width="1.5"/>
+      <line x1="8" y1="30" x2="8" y2="42" stroke="#00c8ff" stroke-width="0.8" opacity=".5"/>
+      <line x1="14" y1="30" x2="14" y2="42" stroke="#00c8ff" stroke-width="0.8" opacity=".5"/>
+      <line x1="20" y1="30" x2="20" y2="42" stroke="#00c8ff" stroke-width="0.8" opacity=".5"/>
+      <!-- Solar panel right -->
+      <rect x="48" y="30" width="22" height="12" rx="2" fill="none" stroke="#00c8ff" stroke-width="1.5"/>
+      <line x1="54" y1="30" x2="54" y2="42" stroke="#00c8ff" stroke-width="0.8" opacity=".5"/>
+      <line x1="60" y1="30" x2="60" y2="42" stroke="#00c8ff" stroke-width="0.8" opacity=".5"/>
+      <line x1="66" y1="30" x2="66" y2="42" stroke="#00c8ff" stroke-width="0.8" opacity=".5"/>
+      <!-- Main truss -->
+      <line x1="24" y1="36" x2="48" y2="36" stroke="#00c8ff" stroke-width="2.5"/>
+      <!-- Modules -->
+      <rect x="28" y="28" width="16" height="16" rx="3" fill="rgba(0,200,255,0.1)" stroke="#00c8ff" stroke-width="1.5"/>
+      <!-- Habitat module -->
+      <ellipse cx="36" cy="36" rx="7" ry="6" fill="rgba(0,200,255,0.15)" stroke="#00ff88" stroke-width="1.2"/>
+      <!-- Docking port top -->
+      <line x1="36" y1="22" x2="36" y2="28" stroke="#00c8ff" stroke-width="1.5"/>
+      <circle cx="36" cy="21" r="2.5" fill="none" stroke="#00c8ff" stroke-width="1.2"/>
+      <!-- Radiators vertical -->
+      <rect x="33" y="10" width="6" height="10" rx="1" fill="none" stroke="rgba(0,200,255,0.5)" stroke-width="1"/>
+      <rect x="33" y="52" width="6" height="10" rx="1" fill="none" stroke="rgba(0,200,255,0.5)" stroke-width="1"/>
+    </svg>
+    <h1>ISS TRACKER</h1>
+    <p class="subtitle">Prochains passages au-dessus de votre position</p>
+  </header>
+
+  <!-- Location inputs -->
+  <div class="loc-card">
+    <h2>📍 Votre position</h2>
+    <div class="loc-row">
+      <div class="coord-box">
+        <label>Latitude</label>
+        <input type="number" id="lat" step="0.0001" placeholder="46.5197" value="">
+      </div>
+      <div class="coord-box">
+        <label>Longitude</label>
+        <input type="number" id="lon" step="0.0001" placeholder="6.6323" value="">
+      </div>
+      <div class="coord-box" style="max-width:100px">
+        <label>Altitude (m)</label>
+        <input type="number" id="alt" step="1" placeholder="400" value="0">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
+        <button class="btn btn-geo" id="btn-geo" onclick="getGeo()">📡 Me localiser</button>
+        <button class="btn btn-calc" id="btn-calc" onclick="calcPasses()">Calculer les passages</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div id="status-bar">
+    <div class="status-dot" id="dot"></div>
+    <span id="status-text">Entrez vos coordonnées ou utilisez la géolocalisation</span>
+  </div>
+
+  <!-- ISS live position -->
+  <div id="iss-now">
+    <div class="live-item">
+      <span class="lbl">🛰 Position ISS</span>
+      <span class="val teal" id="iss-lat">—</span>
+      <span class="val teal" id="iss-lon">—</span>
+    </div>
+    <div class="live-item">
+      <span class="lbl">🚀 Altitude</span>
+      <span class="val" id="iss-alt">—</span>
+    </div>
+    <div class="live-item">
+      <span class="lbl">⚡ Vitesse</span>
+      <span class="val amber" id="iss-speed">—</span>
+    </div>
+    <div class="live-item">
+      <span class="lbl">👁 Visibilité</span>
+      <span class="val" id="iss-vis">—</span>
+    </div>
+  </div>
+
+  <!-- Passes -->
+  <div id="passes-section">
+    <h2>Passages prévus — 10 prochains jours</h2>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Excellent (>60°)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Bon (30–60°)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--text-dim)"></div> Faible (&lt;30°)</div>
+    </div>
+
+    <div id="passes-list"></div>
+  </div>
+
+  <footer>
+    Calcul orbital SGP4 en temps réel · TLE frais depuis <a href="https://celestrak.org" target="_blank">CelesTrak</a><br>
+    Heure locale · L'ISS orbite à ~400 km d'altitude à 27 600 km/h
+  </footer>
+
+</div>
+
+<!-- satellite.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.1.3/satellite.min.js"></script>
+
+<script>
+// ──────────────────────────────────────────────
+//  STARFIELD
+// ──────────────────────────────────────────────
+(function() {
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  let W, H, stars = [];
+
+  function resize() {
+    W = c.width = window.innerWidth;
+    H = c.height = window.innerHeight;
+    stars = [];
+    for (let i = 0; i < 280; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.4,
+        o: Math.random(),
+        s: Math.random() * 0.008 + 0.002
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    stars.forEach(s => {
+      s.o += s.s;
+      if (s.o > 1) s.o = 0;
+      ctx.globalAlpha = Math.abs(Math.sin(s.o * Math.PI));
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+})();
+
+// ──────────────────────────────────────────────
+//  STATE
+// ──────────────────────────────────────────────
+let satrec = null;
+let passes = [];
+let countdownInterval = null;
+
+// ──────────────────────────────────────────────
+//  GEO
+// ──────────────────────────────────────────────
+function getGeo() {
+  setStatus('loading', 'Demande de géolocalisation…');
+  if (!navigator.geolocation) { setStatus('err', 'Géolocalisation non disponible'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    document.getElementById('lat').value = pos.coords.latitude.toFixed(5);
+    document.getElementById('lon').value = pos.coords.longitude.toFixed(5);
+    if (pos.coords.altitude) document.getElementById('alt').value = Math.round(pos.coords.altitude);
+    setStatus('ok', `Position: ${pos.coords.latitude.toFixed(3)}°N, ${pos.coords.longitude.toFixed(3)}°E`);
+  }, err => {
+    setStatus('err', 'Géolocalisation refusée. Entrez vos coordonnées manuellement.');
+  });
+}
+
+// ──────────────────────────────────────────────
+//  FETCH TLE — Celestrak with CORS proxy fallback
+// ──────────────────────────────────────────────
+async function fetchTLE() {
+  const urls = [
+    'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE',
+    'https://celestrak.org/NORAD/elements/stations.txt',
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE'),
+  ];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) continue;
+      const text = await res.text();
+      const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean);
+      
+      // Find ISS TLE lines
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('1 25544') && i + 1 < lines.length && lines[i+1].startsWith('2 25544')) {
+          return { line1: lines[i], line2: lines[i+1] };
+        }
+        if ((lines[i].includes('ISS') || lines[i].includes('ZARYA')) && i + 2 < lines.length) {
+          if (lines[i+1].startsWith('1 ') && lines[i+2].startsWith('2 ')) {
+            return { line1: lines[i+1], line2: lines[i+2] };
+          }
+        }
+      }
+      // Simple 2 or 3 line format
+      if (lines.length >= 2) {
+        const idx = lines.findIndex(l => l.startsWith('1 '));
+        if (idx >= 0 && lines[idx+1] && lines[idx+1].startsWith('2 ')) {
+          return { line1: lines[idx], line2: lines[idx+1] };
+        }
+      }
+    } catch(e) { /* try next */ }
+  }
+  throw new Error('Impossible de récupérer les TLE ISS');
+}
+
+// ──────────────────────────────────────────────
+//  MAIN CALCULATION
+// ──────────────────────────────────────────────
+async function calcPasses() {
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lon = parseFloat(document.getElementById('lon').value);
+  const alt = parseFloat(document.getElementById('alt').value) || 0;
+
+  if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    setStatus('err', 'Coordonnées invalides. Latitude: −90 à 90, Longitude: −180 à 180');
+    return;
+  }
+
+  const btn = document.getElementById('btn-calc');
+  btn.disabled = true;
+  setStatus('loading', 'Récupération des données orbitales ISS (TLE) depuis CelesTrak…');
+
+  try {
+    const tle = await fetchTLE();
+    setStatus('loading', 'TLE ISS obtenu — calcul SGP4 des passages en cours…');
+
+    satrec = satellite.twoline2satrec(tle.line1, tle.line2);
+
+    // Observer location (radians)
+    const obsLat = satellite.degreesToRadians(lat);
+    const obsLon = satellite.degreesToRadians(lon);
+    const obsAlt = alt / 1000; // km
+
+    passes = computePasses(satrec, obsLat, obsLon, obsAlt, lat, lon, 10);
+
+    setStatus('ok', `${passes.length} passage(s) trouvé(s) sur 10 jours · TLE époque: ${getTLEEpoch(tle.line1)}`);
+
+    renderPasses(passes, lat, lon);
+    startLiveISS(lat, lon);
+    startCountdowns();
+
+  } catch(err) {
+    setStatus('err', `Erreur: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ──────────────────────────────────────────────
+//  SGP4 PASS COMPUTATION
+// ──────────────────────────────────────────────
+function computePasses(satrec, obsLat, obsLon, obsAlt, latDeg, lonDeg, days) {
+  const MIN_ELEV = 10; // degrés
+  const STEP = 30;     // secondes (scan grossier)
+  const FINE = 5;      // secondes (scan fin pour les maxima/transitions)
+  const now = new Date();
+  const end = new Date(now.getTime() + days * 86400 * 1000);
+  
+  const found = [];
+  let inPass = false;
+  let passStart = null, passEnd = null;
+  let maxElev = 0, maxElevTime = null;
+  let riseAz = 0, setAz = 0;
+
+  function elevAz(t) {
+    const pos = satellite.propagate(satrec, t);
+    if (!pos.position) return null;
+    const gmst = satellite.gstime(t);
+    const geo = satellite.eciToGeodetic(pos.position, gmst);
+    const obs = { longitude: obsLon, latitude: obsLat, height: obsAlt };
+    const look = satellite.ecfToLookAngles(obs, satellite.eciToEcf(pos.position, gmst));
+    return {
+      elev: satellite.radiansToDegrees(look.elevation),
+      az:   ((satellite.radiansToDegrees(look.azimuth) % 360) + 360) % 360,
+      lat:  satellite.radiansToDegrees(geo.latitude),
+      lon:  satellite.radiansToDegrees(geo.longitude),
+      alt:  geo.height
+    };
+  }
+
+  let t = new Date(now.getTime());
+
+  while (t < end) {
+    const r = elevAz(t);
+    if (!r) { t = new Date(t.getTime() + STEP * 1000); continue; }
+
+    if (!inPass && r.elev >= MIN_ELEV) {
+      // Find precise rise time (binary search back)
+      inPass = true;
+      let t0 = new Date(t.getTime() - STEP * 1000);
+      let t1 = new Date(t.getTime());
+      for (let k = 0; k < 10; k++) {
+        const tm = new Date((t0.getTime() + t1.getTime()) / 2);
+        const rm = elevAz(tm);
+        if (!rm) break;
+        if (rm.elev >= MIN_ELEV) t1 = tm; else t0 = tm;
+      }
+      passStart = new Date(t1.getTime());
+      const rs = elevAz(passStart);
+      riseAz = rs ? rs.az : 0;
+      maxElev = r.elev;
+      maxElevTime = new Date(t.getTime());
+    }
+
+    if (inPass) {
+      if (r.elev > maxElev) { maxElev = r.elev; maxElevTime = new Date(t.getTime()); }
+
+      if (r.elev < MIN_ELEV) {
+        // Find precise set time
+        let t0 = new Date(t.getTime() - FINE * 1000);
+        let t1 = new Date(t.getTime());
+        for (let k = 0; k < 10; k++) {
+          const tm = new Date((t0.getTime() + t1.getTime()) / 2);
+          const rm = elevAz(tm);
+          if (!rm) break;
+          if (rm.elev >= MIN_ELEV) t0 = tm; else t1 = tm;
+        }
+        passEnd = new Date(t0.getTime());
+        const ss = elevAz(passEnd);
+        setAz = ss ? ss.az : 0;
+
+        // Duration
+        const dur = Math.round((passEnd - passStart) / 1000);
+
+        // Refine max elevation
+        if (maxElevTime) {
+          let best = maxElev;
+          for (let dt = -60; dt <= 60; dt += FINE) {
+            const tt = new Date(maxElevTime.getTime() + dt * 1000);
+            const rr = elevAz(tt);
+            if (rr && rr.elev > best) { best = rr.elev; maxElevTime = tt; }
+          }
+          maxElev = best;
+        }
+
+        found.push({
+          start: passStart,
+          end: passEnd,
+          peak: maxElevTime,
+          maxElev: Math.round(maxElev * 10) / 10,
+          duration: dur,
+          riseAz,
+          setAz
+        });
+
+        inPass = false;
+        maxElev = 0;
+        t = new Date(passEnd.getTime() + 60 * 1000); // skip 1 min after set
+        continue;
+      }
+    }
+
+    t = new Date(t.getTime() + (inPass ? FINE : STEP) * 1000);
+  }
+
+  return found;
+}
+
+// ──────────────────────────────────────────────
+//  RENDER
+// ──────────────────────────────────────────────
+function azDir(deg) {
+  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+  return dirs[Math.round(deg / 22.5) % 16];
+}
+
+function fmtTime(d) {
+  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function fmtDate(d) {
+  return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+function fmtDur(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return m > 0 ? `${m}min ${sec}s` : `${sec}s`;
+}
+
+function elevClass(e) {
+  if (e >= 60) return 'good';
+  if (e >= 30) return 'fair';
+  return 'poor';
+}
+
+function elevArcSVG(elev, cls) {
+  const pct = Math.min(elev / 90, 1);
+  const angle = -180 + pct * 180; // -180 (horizon) to 0 (zenith)
+  const r = 22, cx = 27, cy = 26;
+  const rad = angle * Math.PI / 180;
+  const ex = cx + r * Math.cos(rad);
+  const ey = cy + r * Math.sin(rad);
+  const color = cls === 'good' ? '#00ff88' : cls === 'fair' ? '#ffb300' : '#4a7090';
+  return `<svg viewBox="0 0 54 28">
+    <path d="M5,26 A22,22 0 0,1 49,26" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+    <path d="M5,26 A22,22 0 0,1 ${ex.toFixed(1)},${ey.toFixed(1)}" fill="none" stroke="${color}" stroke-width="2.5" opacity="0.8"/>
+    <circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="3" fill="${color}"/>
+    <line x1="5" y1="26" x2="49" y2="26" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+  </svg>`;
+}
+
+function renderPasses(passes, lat, lon) {
+  const sec = document.getElementById('passes-section');
+  const list = document.getElementById('passes-list');
+  sec.style.display = 'block';
+
+  if (passes.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="big">🛰</div>
+      <p>Aucun passage visible à votre latitude.<br>L'ISS peut ne pas passer au-dessus de positions supérieures à 51.6°N/S.</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = passes.map((p, i) => {
+    const cls = elevClass(p.maxElev);
+    return `<div class="pass-card ${cls}" id="pass-${i}">
+      <div class="pass-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="pass-body">
+        <div class="pass-date">${fmtDate(p.start)} — ${fmtTime(p.start)}</div>
+        <div class="pass-meta">
+          <div class="meta-chip"><span class="label">Fin</span><span>${fmtTime(p.end)}</span></div>
+          <div class="meta-chip"><span class="label">Durée</span><span>${fmtDur(p.duration)}</span></div>
+          <div class="meta-chip"><span class="label">Levée</span><span>${Math.round(p.riseAz)}° ${azDir(p.riseAz)}</span></div>
+          <div class="meta-chip"><span class="label">Coucher</span><span>${Math.round(p.setAz)}° ${azDir(p.setAz)}</span></div>
+          <div class="meta-chip"><span class="label">Max à</span><span>${fmtTime(p.peak)}</span></div>
+        </div>
+      </div>
+      <div class="pass-elevation">
+        <div class="elev-arc">${elevArcSVG(p.maxElev, cls)}</div>
+        <div class="elev-label ${cls}">${p.maxElev}°</div>
+      </div>
+      <div class="timer-badge">
+        <span>⏱</span>
+        <span class="countdown" id="cd-${i}">…</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────
+//  COUNTDOWNS
+// ──────────────────────────────────────────────
+function startCountdowns() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(updateCountdowns, 1000);
+  updateCountdowns();
+}
+
+function updateCountdowns() {
+  const now = Date.now();
+  passes.forEach((p, i) => {
+    const el = document.getElementById(`cd-${i}`);
+    if (!el) return;
+    const diff = p.start.getTime() - now;
+    if (diff < 0 && now < p.end.getTime()) {
+      el.textContent = '🔴 EN COURS — fin dans ' + fmtCountdown(p.end.getTime() - now);
+      el.className = 'countdown soon';
+    } else if (diff < 0) {
+      el.textContent = 'Passé';
+      el.style.opacity = '.35';
+    } else {
+      const txt = diff < 3600000
+        ? '🟢 Dans ' + fmtCountdown(diff)
+        : 'Dans ' + fmtCountdown(diff);
+      el.textContent = txt;
+      el.className = diff < 3600000 ? 'countdown soon' : 'countdown';
+    }
+  });
+}
+
+function fmtCountdown(ms) {
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (d > 0) return `${d}j ${h}h ${m.toString().padStart(2,'0')}m`;
+  if (h > 0) return `${h}h ${m.toString().padStart(2,'0')}m ${sec.toString().padStart(2,'0')}s`;
+  return `${m.toString().padStart(2,'0')}m ${sec.toString().padStart(2,'0')}s`;
+}
+
+// ──────────────────────────────────────────────
+//  LIVE ISS POSITION
+// ──────────────────────────────────────────────
+let liveInterval = null;
+
+function startLiveISS(lat, lon) {
+  if (!satrec) return;
+  document.getElementById('iss-now').style.display = 'grid';
+  if (liveInterval) clearInterval(liveInterval);
+  updateLive(lat, lon);
+  liveInterval = setInterval(() => updateLive(lat, lon), 3000);
+}
+
+function updateLive(lat, lon) {
+  if (!satrec) return;
+  const now = new Date();
+  const pos = satellite.propagate(satrec, now);
+  if (!pos.position) return;
+
+  const gmst = satellite.gstime(now);
+  const geo = satellite.eciToGeodetic(pos.position, gmst);
+  const issLat = satellite.radiansToDegrees(geo.latitude);
+  const issLon = satellite.radiansToDegrees(geo.longitude);
+  const alt = geo.height;
+
+  const velKms = Math.sqrt(pos.velocity.x**2 + pos.velocity.y**2 + pos.velocity.z**2);
+  const velKmh = velKms * 3600;
+
+  document.getElementById('iss-lat').textContent = `${issLat.toFixed(3)}° ${issLat >= 0 ? 'N' : 'S'}`;
+  document.getElementById('iss-lon').textContent = `${Math.abs(issLon).toFixed(3)}° ${issLon >= 0 ? 'E' : 'O'}`;
+  document.getElementById('iss-alt').textContent = `${alt.toFixed(0)} km`;
+  document.getElementById('iss-speed').textContent = `${Math.round(velKmh).toLocaleString('fr-FR')} km/h`;
+
+  // Distance from observer
+  const dist = haversine(lat, lon, issLat, issLon);
+  document.getElementById('iss-vis').textContent = `${Math.round(dist)} km`;
+  document.querySelector('#iss-now .live-item:last-child .lbl').textContent = '📏 Distance';
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ──────────────────────────────────────────────
+//  HELPERS
+// ──────────────────────────────────────────────
+function setStatus(type, msg) {
+  const dot = document.getElementById('dot');
+  const txt = document.getElementById('status-text');
+  dot.className = 'status-dot ' + type;
+  txt.textContent = msg;
+}
+
+function getTLEEpoch(line1) {
+  try {
+    const epochStr = line1.slice(18, 32).trim();
+    const year = parseInt(epochStr.slice(0, 2));
+    const y = year < 57 ? 2000 + year : 1900 + year;
+    const day = parseFloat(epochStr.slice(2));
+    const d = new Date(y, 0, 1);
+    d.setDate(d.getDate() + day - 1);
+    return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  } catch(e) { return '—'; }
+}
+
+// ──────────────────────────────────────────────
+//  AUTO-LAUNCH on load if sat.js available
+// ──────────────────────────────────────────────
+window.addEventListener('load', () => {
+  if (typeof satellite === 'undefined') {
+    setStatus('err', 'Erreur: bibliothèque satellite.js non chargée. Vérifiez votre connexion.');
+  } else {
+    setStatus('', 'Prêt · Utilisez "Me localiser" ou entrez vos coordonnées');
+  }
+});
+</script>
+</body>
+</html>
