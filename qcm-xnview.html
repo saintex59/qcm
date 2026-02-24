@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<title>QCM — XnView MP</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════ */
+:root {
+  --bg:        #0f1117;
+  --bg2:       #161820;
+  --surface:   #1c1f2e;
+  --surface2:  #22263a;
+  --border:    rgba(255,255,255,0.08);
+  --border2:   rgba(255,255,255,0.14);
+  --accent:    #4f8ef7;
+  --accent2:   #7c5af7;
+  --ok:        #22c97a;
+  --err:       #f75a5a;
+  --warn:      #f7b84f;
+  --text:      #e2e6f3;
+  --text2:     #8890aa;
+  --text3:     #555e7a;
+  --mono:      'DM Mono', monospace;
+  --display:   'Syne', sans-serif;
+  --body:      'DM Sans', sans-serif;
+  --radius:    14px;
+  --shadow:    0 4px 32px rgba(0,0,0,0.45);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  /* subtle grid texture */
+  background-image:
+    linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.app {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+.header {
+  margin-bottom: 36px;
+  animation: fadeUp 0.5s ease both;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.logo-badge {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(79,142,247,0.3);
+}
+
+.header-meta { flex: 1; }
+
+.header-meta h1 {
+  font-family: var(--display);
+  font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.header-meta .sub {
+  font-size: 0.78rem;
+  color: var(--text2);
+  margin-top: 2px;
+  font-family: var(--mono);
+}
+
+.score-pill {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.score-pill .val {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Progress bar */
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.progress-bar-bg {
+  flex: 1;
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  width: 0%;
+}
+
+.progress-txt {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text3);
+  min-width: 52px;
+  text-align: right;
+}
+
+/* ═══════════════════════════════════════════
+   QUESTION CARD
+═══════════════════════════════════════════ */
+.question-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 28px 24px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.35s ease both;
+  position: relative;
+  overflow: hidden;
+}
+
+.question-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.question-card.active::before { opacity: 1; }
+
+.q-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.q-num {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: rgba(79,142,247,0.12);
+  border: 1px solid rgba(79,142,247,0.25);
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.q-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* Category tag */
+.q-cat {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--text3);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.q-cat::before {
+  content: '';
+  display: inline-block;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent2);
+}
+
+/* ═══════════════════════════════════════════
+   ANSWER OPTIONS
+═══════════════════════════════════════════ */
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.option:hover:not(.disabled) {
+  border-color: var(--border2);
+  background: var(--surface2);
+  transform: translateX(3px);
+}
+
+.option.selected {
+  border-color: var(--accent);
+  background: rgba(79,142,247,0.08);
+}
+
+.option.correct {
+  border-color: var(--ok);
+  background: rgba(34,201,122,0.1);
+}
+
+.option.wrong {
+  border-color: var(--err);
+  background: rgba(247,90,90,0.1);
+}
+
+.option.disabled { cursor: default; }
+
+.option-letter {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text2);
+  flex-shrink: 0;
+  transition: all 0.18s;
+}
+
+.option.selected .option-letter {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.option.correct .option-letter {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #fff;
+}
+.option.wrong .option-letter {
+  background: var(--err);
+  border-color: var(--err);
+  color: #fff;
+}
+
+.option-text {
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.option-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.option.correct .option-icon,
+.option.wrong   .option-icon { opacity: 1; }
+
+/* ═══════════════════════════════════════════
+   EXPLANATION BOX
+═══════════════════════════════════════════ */
+.explanation {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.83rem;
+  color: var(--text2);
+  line-height: 1.55;
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+.explanation.show { display: block; }
+.explanation strong { color: var(--text); }
+
+/* ═══════════════════════════════════════════
+   NAVIGATION BUTTONS
+═══════════════════════════════════════════ */
+.nav-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  font-family: var(--body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 2px 16px rgba(79,142,247,0.35);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 22px rgba(79,142,247,0.45); }
+.btn-primary:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
+
+.btn-ghost {
+  background: transparent;
+  border: 1.5px solid var(--border2);
+  color: var(--text2);
+}
+.btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+
+.btn-danger {
+  background: rgba(247,90,90,0.12);
+  border: 1.5px solid rgba(247,90,90,0.3);
+  color: var(--err);
+}
+.btn-danger:hover { background: rgba(247,90,90,0.2); }
+
+/* ═══════════════════════════════════════════
+   RESULTS SCREEN
+═══════════════════════════════════════════ */
+#results-screen {
+  display: none;
+  animation: fadeUp 0.5s ease;
+}
+
+.results-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px 28px;
+  text-align: center;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.results-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(79,142,247,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.score-ring {
+  width: 120px; height: 120px;
+  margin: 0 auto 20px;
+  position: relative;
+}
+
+.score-ring svg { transform: rotate(-90deg); }
+
+.score-ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+}
+
+.score-ring-text .big {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+.score-ring-text .small {
+  font-size: 0.65rem;
+  color: var(--text2);
+  font-family: var(--mono);
+}
+
+.results-title {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.results-msg {
+  font-size: 0.9rem;
+  color: var(--text2);
+  margin-bottom: 24px;
+}
+
+.stats-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.stat-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  text-align: center;
+  min-width: 90px;
+}
+
+.stat-box .sv {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stat-box .sl {
+  font-size: 0.68rem;
+  color: var(--text2);
+  font-family: var(--mono);
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.sv.ok   { color: var(--ok); }
+.sv.err  { color: var(--err); }
+.sv.warn { color: var(--warn); }
+
+/* Review section */
+.review-section {
+  margin-top: 24px;
+}
+
+.review-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.review-icon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+
+.review-body { flex: 1; }
+
+.review-q {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.review-ans {
+  font-size: 0.78rem;
+  color: var(--text2);
+  font-family: var(--mono);
+}
+
+.review-ans .correct-ans { color: var(--ok); }
+.review-ans .wrong-ans   { color: var(--err); }
+
+/* ═══════════════════════════════════════════
+   INTRO SCREEN
+═══════════════════════════════════════════ */
+#intro-screen {
+  animation: fadeUp 0.5s ease;
+}
+
+.intro-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px 32px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.intro-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+}
+
+.intro-emoji { font-size: 3.5rem; margin-bottom: 16px; display: block; }
+
+.intro-card h2 {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.intro-card p {
+  font-size: 0.9rem;
+  color: var(--text2);
+  max-width: 500px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+}
+
+.intro-chips {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.chip {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  color: var(--text2);
+  font-family: var(--mono);
+}
+
+/* ═══════════════════════════════════════════
+   CATEGORY FILTER BAR (résultats)
+═══════════════════════════════════════════ */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.filter-btn {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-btn.active, .filter-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+.pop { animation: pop 0.2s ease; }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media (max-width: 500px) {
+  .app { padding: 20px 14px 60px; }
+  .question-card { padding: 20px 18px 18px; }
+  .intro-card { padding: 28px 20px; }
+  .nav-row { flex-direction: column-reverse; }
+  .btn { width: 100%; justify-content: center; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── HEADER (toujours visible) ── -->
+  <div class="header" id="main-header" style="display:none">
+    <div class="header-top">
+      <div class="logo-badge">🖼</div>
+      <div class="header-meta">
+        <h1>QCM — XnView MP</h1>
+        <div class="sub">Évaluation des connaissances · 30 questions</div>
+      </div>
+      <div class="score-pill">Score : <span class="val" id="live-score">0 / 0</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="prog-fill"></div>
+      </div>
+      <div class="progress-txt" id="prog-txt">0 / 30</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       ÉCRAN D'ACCUEIL
+  ══════════════════════════════════════ -->
+  <div id="intro-screen">
+    <div class="intro-card">
+      <span class="intro-emoji">🖼️</span>
+      <h2>QCM — XnView MP</h2>
+      <p>Testez vos connaissances sur XnView MP : installation, interface, outils d'édition, formats, raccourcis clavier et fonctions avancées.</p>
+      <div class="intro-chips">
+        <div class="chip">📋 30 questions</div>
+        <div class="chip">🏷 6 catégories</div>
+        <div class="chip">💡 Explications détaillées</div>
+        <div class="chip">🎯 Score en temps réel</div>
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()" style="margin:0 auto">
+        Commencer le QCM →
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       ÉCRAN DE QUIZ
+  ══════════════════════════════════════ -->
+  <div id="quiz-screen" style="display:none">
+    <div id="question-container"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       ÉCRAN DE RÉSULTATS
+  ══════════════════════════════════════ -->
+  <div id="results-screen">
+
+    <div class="results-hero">
+      <div class="score-ring">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="url(#rg)" stroke-width="10"
+                  stroke-linecap="round"
+                  stroke-dasharray="326.7"
+                  stroke-dashoffset="326.7"
+                  id="ring-arc"/>
+          <defs>
+            <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#4f8ef7"/>
+              <stop offset="100%" stop-color="#7c5af7"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="score-ring-text">
+          <div class="big" id="res-pct">—</div>
+          <div class="small">SCORE</div>
+        </div>
+      </div>
+
+      <div class="results-title" id="res-title">—</div>
+      <div class="results-msg"  id="res-msg">—</div>
+
+      <div class="stats-row">
+        <div class="stat-box"><div class="sv ok"   id="res-ok">—</div><div class="sl">Correctes</div></div>
+        <div class="stat-box"><div class="sv err"  id="res-err">—</div><div class="sl">Incorrectes</div></div>
+        <div class="stat-box"><div class="sv warn" id="res-skip">—</div><div class="sl">Ignorées</div></div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="restartQuiz()">↺ Recommencer</button>
+        <button class="btn btn-ghost"   onclick="showReview()">📋 Voir le corrigé</button>
+      </div>
+    </div>
+
+    <!-- Corrigé détaillé -->
+    <div id="review-area" style="display:none">
+      <div class="review-section">
+        <div class="filter-bar" id="review-filters">
+          <button class="filter-btn active" onclick="filterReview('all',this)">Toutes (30)</button>
+          <button class="filter-btn" onclick="filterReview('wrong',this)">❌ Incorrectes</button>
+          <button class="filter-btn" onclick="filterReview('ok',this)">✅ Correctes</button>
+          <button class="filter-btn" onclick="filterReview('skip',this)">⏭ Ignorées</button>
+        </div>
+        <div id="review-list"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  DONNÉES — 30 QUESTIONS SUR XNVIEW MP
+// ═══════════════════════════════════════════════════════════════
+const QUESTIONS = [
+  // ── CATÉGORIE 1 : Installation & configuration ──────────────
+  {
+    cat: "Installation & Configuration",
+    q: "Sur quel site officiel peut-on télécharger XnView MP gratuitement ?",
+    opts: ["www.xnview.com/fr/xnview-mp/", "www.xnviewmp.org", "www.adobe.com/xnview", "www.softonic.com/xnview"],
+    ans: 0,
+    exp: "<strong>www.xnview.com/fr/xnview-mp/</strong> est le site officiel de XnSoft, l'éditeur de XnView MP. C'est le seul lien sûr et officiel pour télécharger le logiciel sans adware ni spyware."
+  },
+  {
+    cat: "Installation & Configuration",
+    q: "XnView MP est distribué sous quelle licence pour un usage personnel ?",
+    opts: ["Shareware (essai 30 jours)", "Gratuiciel (Freeware)", "Logiciel open source (GPL)", "Abonnement mensuel"],
+    ans: 1,
+    exp: "<strong>XnView MP est un gratuiciel (Freeware)</strong> : totalement gratuit pour usage privé, éducatif et associations à but non lucratif. Un usage commercial nécessite l'achat d'une licence."
+  },
+  {
+    cat: "Installation & Configuration",
+    q: "Comment changer la langue de XnView MP en français après l'installation ?",
+    opts: ["Fichier > Préférences > Langue", "Outils > Paramètres > Interface > Langue", "Afficher > Options > Localisation", "Aide > À propos > Langue"],
+    ans: 1,
+    exp: "<strong>Outils > Paramètres > Interface > Langue</strong> permet de sélectionner le français. Un redémarrage du logiciel est nécessaire pour appliquer le changement."
+  },
+  {
+    cat: "Installation & Configuration",
+    q: "Quelle est la version recommandée pour un PC sous Windows 10 ou 11 (64 bits) ?",
+    opts: ["Setup Win 32bit", "Setup Win 64bit", "Zip Win 32bit", "Linux TGZ 64bit"],
+    ans: 1,
+    exp: "<strong>Setup Win 64bit</strong> est la version à télécharger pour tout PC récent sous Windows 10/11. Elle exploite pleinement la mémoire et les processeurs 64 bits modernes."
+  },
+  {
+    cat: "Installation & Configuration",
+    q: "Quel raccourci clavier ouvre la fenêtre des Paramètres de XnView MP ?",
+    opts: ["F10", "Ctrl+P", "F12", "Alt+S"],
+    ans: 2,
+    exp: "<strong>F12</strong> ouvre directement la fenêtre des Paramètres. On peut aussi y accéder via le menu Outils > Paramètres."
+  },
+
+  // ── CATÉGORIE 2 : Interface & navigation ────────────────────
+  {
+    cat: "Interface & Navigation",
+    q: "Comment s'appelle le mode qui affiche les miniatures de vos photos par dossier ?",
+    opts: ["Mode Visionneuse", "Mode Navigateur (Browser)", "Mode Galerie", "Mode Explorateur"],
+    ans: 1,
+    exp: "<strong>Le mode Navigateur (Browser)</strong> affiche l'arborescence des dossiers à gauche, les miniatures au centre et les informations/métadonnées à droite."
+  },
+  {
+    cat: "Interface & Navigation",
+    q: "Quelle touche permet de passer à l'image suivante en mode Visionneuse ?",
+    opts: ["Espace", "Flèche droite →", "Page suivante", "N"],
+    ans: 1,
+    exp: "<strong>La flèche droite →</strong> passe à l'image suivante. La flèche gauche ← revient à l'image précédente. La touche Espace peut aussi être utilisée dans certaines configurations."
+  },
+  {
+    cat: "Interface & Navigation",
+    q: "Quel raccourci clavier sélectionne toutes les images d'un dossier dans le navigateur ?",
+    opts: ["Ctrl+S", "Ctrl+A", "Ctrl+F", "Alt+A"],
+    ans: 1,
+    exp: "<strong>Ctrl+A</strong> (Sélectionner tout) sélectionne toutes les images du dossier courant dans le navigateur, comme dans la plupart des applications Windows."
+  },
+  {
+    cat: "Interface & Navigation",
+    q: "Comment lancer le diaporama plein écran dans XnView MP ?",
+    opts: ["F3", "F4", "F5", "F6"],
+    ans: 1,
+    exp: "<strong>F4</strong> lance le diaporama. Vous pouvez aussi utiliser le menu Afficher > Diaporama, ou l'icône correspondante dans la barre d'outils."
+  },
+  {
+    cat: "Interface & Navigation",
+    q: "Quelle touche permet d'afficher une image en plein écran ?",
+    opts: ["F9", "F10", "F11", "F12"],
+    ans: 2,
+    exp: "<strong>F11</strong> bascule en mode plein écran. Appuyez de nouveau sur F11 ou sur Échap pour revenir à l'affichage normal."
+  },
+
+  // ── CATÉGORIE 3 : Édition & retouche ────────────────────────
+  {
+    cat: "Édition & Retouche",
+    q: "Dans quel menu se trouve l'outil de recadrage (rogner) d'une image ?",
+    opts: ["Fichier > Rogner", "Image > Rogner", "Filtre > Rogner", "Outils > Rogner"],
+    ans: 1,
+    exp: "<strong>Image > Rogner</strong> ouvre l'outil de recadrage. Le raccourci clavier est <strong>Maj+C</strong> en mode Visionneuse. Vous pouvez définir un ratio fixe (16:9, 4:3…) ou des dimensions exactes."
+  },
+  {
+    cat: "Édition & Retouche",
+    q: "Quel raccourci effectue une rotation de 90° dans le sens horaire ?",
+    opts: ["Ctrl+L", "Ctrl+R", "Ctrl+T", "Ctrl+H"],
+    ans: 1,
+    exp: "<strong>Ctrl+R</strong> effectue une rotation de 90° dans le sens horaire (vers la droite). <strong>Ctrl+L</strong> effectue la rotation dans le sens anti-horaire (vers la gauche)."
+  },
+  {
+    cat: "Édition & Retouche",
+    q: "Où se trouve l'outil Redimensionner une image ?",
+    opts: ["Fichier > Redimensionner", "Image > Redimensionner", "Outils > Redimensionner", "Filtre > Redimensionner"],
+    ans: 1,
+    exp: "<strong>Image > Redimensionner</strong> ouvre la fenêtre de redimensionnement. Vous pouvez saisir les nouvelles dimensions en pixels, en pourcentage ou en centimètres, et choisir le filtre de rééchantillonnage."
+  },
+  {
+    cat: "Édition & Retouche",
+    q: "Quel filtre de rééchantillonnage offre la meilleure qualité lors d'un redimensionnement ?",
+    opts: ["Nearest Neighbor (plus proche voisin)", "Bilinéaire", "Bicubique", "Lanczos"],
+    ans: 3,
+    exp: "<strong>Lanczos</strong> est le filtre de rééchantillonnage le plus qualitatif, particulièrement pour réduire des images. Il préserve mieux les détails fins. Le bicubique est un bon compromis vitesse/qualité."
+  },
+  {
+    cat: "Édition & Retouche",
+    q: "Comment accéder aux réglages Luminosité et Contraste d'une image ?",
+    opts: ["Filtre > Luminosité", "Image > Ajuster > Luminosité-Contraste", "Outils > Lumière", "Afficher > Corrections"],
+    ans: 1,
+    exp: "<strong>Image > Ajuster > Luminosité-Contraste</strong> ouvre les curseurs de réglage (−127 à +127). On y trouve aussi Niveaux, Courbes et Balance des blancs pour des corrections plus précises."
+  },
+  {
+    cat: "Édition & Retouche",
+    q: "Quelle option de rotation permet de ne PAS recompresser un fichier JPEG ?",
+    opts: ["Rotation standard", "Rotation sans perte (lossless)", "Rotation par transformation", "Rotation EXIF uniquement"],
+    ans: 1,
+    exp: "<strong>La rotation sans perte (lossless)</strong> modifie directement les données JPEG sans recompression, évitant toute perte de qualité supplémentaire. À activer dans Paramètres > Général > « Utiliser rotation sans perte si possible »."
+  },
+  {
+    cat: "Édition & Retouche",
+    q: "Quelle commande permet d'enregistrer une image sous un nouveau nom/format sans écraser l'original ?",
+    opts: ["Ctrl+S", "Ctrl+Maj+S", "Ctrl+E", "Ctrl+Alt+S"],
+    ans: 1,
+    exp: "<strong>Ctrl+Maj+S</strong> (Enregistrer sous) ouvre la boîte de dialogue pour choisir le nom, le dossier et le format de sortie. <strong>Ctrl+S</strong> écrase directement l'original, ce qui est à éviter !"
+  },
+
+  // ── CATÉGORIE 4 : Traitement par lot ────────────────────────
+  {
+    cat: "Traitement par lot",
+    q: "Quel raccourci ouvre la fenêtre de Conversion par lot ?",
+    opts: ["Ctrl+B", "Ctrl+U", "Ctrl+Alt+B", "Ctrl+Maj+C"],
+    ans: 1,
+    exp: "<strong>Ctrl+U</strong> ouvre la fenêtre « Conversion par lot ». On peut aussi y accéder via Outils > Conversion par lot, ou en sélectionnant des images puis clic-droit > Conversion par lot."
+  },
+  {
+    cat: "Traitement par lot",
+    q: "Dans la conversion par lot, quel onglet permet d'ajouter des opérations comme le redimensionnement ?",
+    opts: ["Onglet Entrée", "Onglet Actions", "Onglet Sortie", "Onglet Options"],
+    ans: 1,
+    exp: "<strong>L'onglet Actions</strong> permet d'enchaîner des opérations : redimensionnement, rotation, recadrage, ajustements couleur, ajout de filigrane, etc. Les actions s'appliquent dans l'ordre défini."
+  },
+  {
+    cat: "Traitement par lot",
+    q: "Pour renommer automatiquement des fichiers en lot (ex: photo_001, photo_002…), quelle syntaxe utilise-t-on ?",
+    opts: ["photo_{N}", "photo_{###}", "photo_[num]", "photo_<seq>"],
+    ans: 1,
+    exp: "<strong>La syntaxe {###}</strong> génère un numéro séquentiel avec le nombre de chiffres correspondant au nombre de dièses (#). Par exemple : photo_{###} donnera photo_001, photo_002… Les accolades {} délimitent les variables de renommage."
+  },
+  {
+    cat: "Traitement par lot",
+    q: "Combien de formats de sortie XnView MP peut-il exporter approximativement ?",
+    opts: ["Environ 10 formats", "Environ 30 formats", "Environ 70 formats", "Plus de 200 formats"],
+    ans: 2,
+    exp: "<strong>XnView MP peut exporter vers environ 70 formats</strong> différents (JPEG, PNG, WebP, TIFF, BMP, PDF, GIF, ICO…) tout en pouvant lire plus de 500 formats en entrée."
+  },
+
+  // ── CATÉGORIE 5 : Formats & compatibilité ───────────────────
+  {
+    cat: "Formats & Compatibilité",
+    q: "Combien de formats d'images XnView MP peut-il lire environ ?",
+    opts: ["Environ 50", "Environ 100", "Environ 200", "Plus de 500"],
+    ans: 3,
+    exp: "<strong>XnView MP supporte plus de 500 formats</strong> d'images, dont les formats courants (JPEG, PNG, GIF, BMP, TIFF, WebP), les formats RAW d'appareils photo (CR2, NEF, ARW, DNG…), ainsi que des formats spéciaux (PSD, HEIC, AVIF, SVG, PDF…)."
+  },
+  {
+    cat: "Formats & Compatibilité",
+    q: "Quel format est recommandé pour publier des photos sur le web avec une bonne compression ?",
+    opts: ["BMP (sans compression)", "TIFF (haute qualité)", "JPEG ou WebP", "PSD (Photoshop)"],
+    ans: 2,
+    exp: "<strong>JPEG et WebP</strong> sont les formats web par excellence. JPEG offre un bon rapport qualité/poids (qualité 80% recommandée). WebP est plus récent et compresse encore mieux à qualité équivalente, et est pris en charge par tous les navigateurs modernes."
+  },
+  {
+    cat: "Formats & Compatibilité",
+    q: "Que signifie le format RAW (CR2, NEF, ARW) ?",
+    opts: ["Un format compressé sans perte", "Les données brutes du capteur de l'appareil photo", "Un format de dessin vectoriel", "Un format spécifique à Adobe"],
+    ans: 1,
+    exp: "<strong>Le format RAW</strong> contient les données brutes du capteur photographique, sans traitement ni compression avec perte. Il offre une latitude de retouche maximale. CR2 est le format Canon, NEF celui de Nikon, ARW celui de Sony."
+  },
+  {
+    cat: "Formats & Compatibilité",
+    q: "Quelle résolution (en dpi) est recommandée pour une impression de qualité professionnelle ?",
+    opts: ["72 dpi", "96 dpi", "150 dpi", "300 dpi"],
+    ans: 3,
+    exp: "<strong>300 dpi (points par pouce)</strong> est le standard pour l'impression professionnelle. 72-96 dpi suffit pour un affichage écran (web). En dessous de 150 dpi pour l'impression, les pixels deviennent visibles."
+  },
+  {
+    cat: "Formats & Compatibilité",
+    q: "Comment associer XnView MP à tous les formats images via le logiciel lui-même ?",
+    opts: ["Fichier > Associations", "Outils > Paramètres > Intégration > Associations", "Windows > Programmes par défaut", "Aide > Configuration"],
+    ans: 1,
+    exp: "<strong>Outils > Paramètres > Intégration > Associations de fichiers</strong> permet de cocher les formats à associer à XnView MP. Le bouton « Tout sélectionner » associe tous les formats en un clic."
+  },
+
+  // ── CATÉGORIE 6 : Fonctions avancées ────────────────────────
+  {
+    cat: "Fonctions Avancées",
+    q: "Quel menu donne accès aux métadonnées EXIF d'une photo (date, appareil, paramètres…) ?",
+    opts: ["Fichier > Propriétés", "Image > Informations (Alt+Entrée)", "Afficher > EXIF", "Outils > Métadonnées"],
+    ans: 1,
+    exp: "<strong>Image > Informations</strong> (raccourci <strong>Alt+Entrée</strong>) affiche les métadonnées complètes : EXIF (date, appareil, focale, ISO, vitesse…), IPTC (mots-clés, copyright) et XMP."
+  },
+  {
+    cat: "Fonctions Avancées",
+    q: "La fonction de notation par étoiles (Rating) s'active avec quelles touches ?",
+    opts: ["F1 à F5", "Touches 1 à 5", "Ctrl+1 à Ctrl+5", "Alt+1 à Alt+5"],
+    ans: 1,
+    exp: "<strong>Les touches 1 à 5</strong> attribuent directement une note (1 à 5 étoiles) à l'image sélectionnée. La touche 0 supprime la note. Ces notes sont stockées dans la base de données de XnView MP et permettent de filtrer vos photos."
+  },
+  {
+    cat: "Fonctions Avancées",
+    q: "Quel raccourci permet de comparer deux images côte à côte dans XnView MP ?",
+    opts: ["Ctrl+D (Dupliquer)", "Ctrl+K (Comparer)", "Afficher > Comparer", "F7"],
+    ans: 2,
+    exp: "<strong>Afficher > Comparer</strong> (ou l'icône dans la barre d'outils) ouvre le mode comparaison. Sélectionnez 2 images dans le navigateur avant de lancer la comparaison. Les deux images s'affichent côte à côte avec synchronisation du zoom."
+  },
+  {
+    cat: "Fonctions Avancées",
+    q: "Que permet la fonction « Dupliquer un fichier » de XnView MP ?",
+    opts: ["Copier une image dans le presse-papiers", "Créer une copie physique du fichier dans le même dossier", "Dupliquer un onglet en mode visionneuse", "Créer un raccourci vers le fichier"],
+    ans: 1,
+    exp: "<strong>Dupliquer un fichier</strong> crée une copie physique du fichier image dans le dossier courant, avec un nom légèrement modifié (ex: photo_copie.jpg). Utile pour travailler sur une copie sans risquer l'original."
+  },
+  {
+    cat: "Fonctions Avancées",
+    q: "XnView MP est-il disponible uniquement sous Windows ?",
+    opts: ["Oui, Windows uniquement", "Non, Windows et macOS uniquement", "Non, Windows, macOS et Linux", "Non, il existe aussi sur Android"],
+    ans: 2,
+    exp: "<strong>XnView MP est multiplateforme</strong> : il est disponible pour <strong>Windows, macOS et Linux</strong>. C'est l'une de ses grandes forces par rapport à l'ancien XnView Classic qui était limité à Windows."
+  },
+  {
+    cat: "Fonctions Avancées",
+    q: "Quelle fonctionnalité de XnView MP permet de trouver des images identiques ou similaires dans vos dossiers ?",
+    opts: ["Chercher > Images similaires", "Outils > Chercher les doublons", "Filtre > Dupliquer", "Fichier > Analyser les doublons"],
+    ans: 1,
+    exp: "<strong>Outils > Chercher les doublons</strong> analyse vos dossiers pour trouver des images identiques ou visuellement similaires. Très utile pour nettoyer une bibliothèque photo encombrée par des doublons."
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let state = {
+  current:  0,
+  answers:  new Array(30).fill(null),  // index de réponse choisie (ou -1 = ignorée)
+  answered: new Array(30).fill(false),
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════
+function $(id) { return document.getElementById(id); }
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+const LETTERS = ['A','B','C','D'];
+
+// ═══════════════════════════════════════════════════════════════
+//  QUIZ LOGIC
+// ═══════════════════════════════════════════════════════════════
+function startQuiz() {
+  $('intro-screen').style.display = 'none';
+  $('main-header').style.display  = 'block';
+  $('quiz-screen').style.display  = 'block';
+  state = {
+    current:  0,
+    answers:  new Array(30).fill(null),
+    answered: new Array(30).fill(false),
+  };
+  renderQuestion(0);
+  updateHeader();
+}
+
+function renderQuestion(idx) {
+  const q   = QUESTIONS[idx];
+  const ans = state.answers[idx];
+  const done = state.answered[idx];
+
+  const container = $('question-container');
+  container.innerHTML = `
+    <div class="question-card active" id="qcard">
+      <div class="q-cat">${q.cat}</div>
+      <div class="q-header">
+        <div class="q-num">Q${String(idx+1).padStart(2,'0')}</div>
+        <div class="q-text">${q.q}</div>
+      </div>
+      <div class="options" id="opts">
+        ${q.opts.map((opt, i) => `
+          <div class="option${done ? ' disabled' + (i === q.ans ? ' correct' : (ans === i ? ' wrong' : '')) : (ans === i ? ' selected' : '')}"
+               id="opt${i}"
+               onclick="${!done ? `selectOption(${i})` : ''}">
+            <div class="option-letter">${LETTERS[i]}</div>
+            <div class="option-text">${opt}</div>
+            <div class="option-icon">${done ? (i === q.ans ? '✅' : (ans === i ? '❌' : '')) : ''}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="explanation${done ? ' show' : ''}" id="expl">
+        💡 ${q.exp}
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost"   onclick="goTo(${idx-1})" ${idx===0?'disabled':''}>← Préc.</button>
+        <button class="btn btn-ghost"   onclick="skipQuestion()" ${done?'disabled':''}>Ignorer ⏭</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" id="btn-validate" onclick="validate()"
+          ${(ans === null || done) ? 'disabled' : ''}>
+          Valider ✓
+        </button>
+        <button class="btn btn-ghost" onclick="goTo(${idx+1})" ${idx===29?'style="display:none"':''}>
+          Suiv. →
+        </button>
+        <button class="btn btn-primary" onclick="showResults()" ${idx!==29?'style="display:none"':''}>
+          Terminer 🏁
+        </button>
+      </div>
+    </div>
+  `;
+
+  updateHeader();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectOption(i) {
+  if (state.answered[state.current]) return;
+
+  state.answers[state.current] = i;
+
+  // update UI
+  document.querySelectorAll('.option').forEach((el, j) => {
+    el.classList.toggle('selected', j === i);
+  });
+
+  // enable validate
+  const btn = $('btn-validate');
+  if (btn) { btn.disabled = false; btn.classList.add('pop'); }
+}
+
+function validate() {
+  const idx = state.current;
+  if (state.answers[idx] === null || state.answered[idx]) return;
+  state.answered[idx] = true;
+
+  const q   = QUESTIONS[idx];
+  const ans = state.answers[idx];
+
+  // Show correct/wrong
+  document.querySelectorAll('.option').forEach((el, i) => {
+    el.classList.add('disabled');
+    if (i === q.ans) { el.classList.add('correct'); el.querySelector('.option-icon').textContent = '✅'; }
+    else if (i === ans && ans !== q.ans) { el.classList.add('wrong'); el.querySelector('.option-icon').textContent = '❌'; }
+    el.querySelector('.option-icon').style.opacity = (i === q.ans || i === ans) ? '1' : '0';
+  });
+
+  $('expl').classList.add('show');
+  $('btn-validate').disabled = true;
+  updateHeader();
+}
+
+function skipQuestion() {
+  if (state.answered[state.current]) return;
+  state.answers[state.current]  = -1;
+  state.answered[state.current] = true;
+  renderQuestion(state.current);
+}
+
+function goTo(idx) {
+  if (idx < 0 || idx > 29) return;
+  state.current = idx;
+  renderQuestion(idx);
+}
+
+function updateHeader() {
+  const done    = state.answered.filter(Boolean).length;
+  const correct = state.answers.reduce((acc, a, i) =>
+    acc + (state.answered[i] && a === QUESTIONS[i].ans ? 1 : 0), 0);
+  const pct     = Math.round(done / 30 * 100);
+
+  $('live-score').textContent = `${correct} / ${done}`;
+  $('prog-fill').style.width  = pct + '%';
+  $('prog-txt').textContent   = `${done} / 30`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RÉSULTATS
+// ═══════════════════════════════════════════════════════════════
+function showResults() {
+  $('quiz-screen').style.display    = 'none';
+  $('results-screen').style.display = 'block';
+
+  const correct = state.answers.reduce((acc, a, i) =>
+    acc + (state.answered[i] && a === QUESTIONS[i].ans ? 1 : 0), 0);
+  const wrong   = state.answers.reduce((acc, a, i) =>
+    acc + (state.answered[i] && a !== null && a !== -1 && a !== QUESTIONS[i].ans ? 1 : 0), 0);
+  const skipped = state.answers.filter(a => a === -1 || a === null).length;
+  const pct     = Math.round(correct / 30 * 100);
+
+  // Score ring animation
+  const circumference = 326.7;
+  const offset = circumference - (pct / 100) * circumference;
+  setTimeout(() => {
+    $('ring-arc').style.transition = 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)';
+    $('ring-arc').style.strokeDashoffset = offset;
+  }, 100);
+
+  $('res-pct').textContent  = pct + '%';
+  $('res-ok').textContent   = correct;
+  $('res-err').textContent  = wrong;
+  $('res-skip').textContent = skipped;
+
+  // Message selon score
+  let title, msg;
+  if (pct >= 90) {
+    title = '🏆 Excellent !';
+    msg = `Vous maîtrisez XnView MP à la perfection. Score exceptionnel de ${correct}/30 !`;
+  } else if (pct >= 70) {
+    title = '🎉 Très bien !';
+    msg = `Très bonne maîtrise de XnView MP. Quelques points à revoir pour atteindre l'excellence.`;
+  } else if (pct >= 50) {
+    title = '👍 Pas mal !';
+    msg = `Vous avez les bases de XnView MP. Continuez à explorer ses fonctionnalités.`;
+  } else if (pct >= 30) {
+    title = '📚 À retravailler';
+    msg = `XnView MP est un logiciel riche. Consultez le guide et retentez le QCM !`;
+  } else {
+    title = '💪 Débutant';
+    msg = `C'est un bon début ! Explorez XnView MP et ses nombreuses fonctionnalités.`;
+  }
+
+  $('res-title').textContent = title;
+  $('res-msg').textContent   = msg;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showReview() {
+  const area = $('review-area');
+  area.style.display = area.style.display === 'none' ? 'block' : 'none';
+  if (area.style.display === 'block') {
+    renderReview('all');
+    area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function filterReview(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReview(filter);
+}
+
+function renderReview(filter) {
+  const list = $('review-list');
+  let html = '';
+
+  QUESTIONS.forEach((q, i) => {
+    const a    = state.answers[i];
+    const done = state.answered[i];
+    const isOk   = done && a === q.ans;
+    const isWrong= done && a !== null && a !== -1 && a !== q.ans;
+    const isSkip = !done || a === null || a === -1;
+
+    if (filter === 'ok'    && !isOk)    return;
+    if (filter === 'wrong' && !isWrong) return;
+    if (filter === 'skip'  && !isSkip)  return;
+
+    const icon = isOk ? '✅' : isWrong ? '❌' : '⏭';
+
+    const yourAns   = a !== null && a !== -1 ? q.opts[a] : '—';
+    const correctAns= q.opts[q.ans];
+
+    html += `
+      <div class="review-item" style="cursor:pointer" onclick="jumpToQ(${i})">
+        <div class="review-icon">${icon}</div>
+        <div class="review-body">
+          <div class="review-q">Q${i+1}. ${q.q}</div>
+          <div class="review-ans">
+            ${isWrong ? `<span class="wrong-ans">Votre réponse : ${yourAns}</span> &nbsp;·&nbsp; ` : ''}
+            <span class="correct-ans">✓ ${correctAns}</span>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  list.innerHTML = html || '<div style="text-align:center;color:var(--text2);padding:24px;font-size:.85rem">Aucune question dans cette catégorie.</div>';
+}
+
+function jumpToQ(idx) {
+  $('results-screen').style.display = 'none';
+  $('quiz-screen').style.display    = 'block';
+  state.current = idx;
+  renderQuestion(idx);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restartQuiz() {
+  $('results-screen').style.display = 'none';
+  // Reset ring
+  $('ring-arc').style.transition = 'none';
+  $('ring-arc').style.strokeDashoffset = '326.7';
+  startQuiz();
+}
+</script>
+</body>
+</html>
