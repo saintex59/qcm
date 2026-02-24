@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<title>ISS — Les Sables-d'Olonne</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #020a14;
+    --panel:     rgba(4, 20, 42, 0.88);
+    --border:    rgba(0, 200, 255, 0.18);
+    --teal:      #00c8ff;
+    --teal-dim:  rgba(0, 200, 255, 0.15);
+    --teal-glow: rgba(0, 200, 255, 0.4);
+    --green:     #00ff88;
+    --amber:     #ffb300;
+    --red:       #ff4466;
+    --text:      #c8e8ff;
+    --text-dim:  #4a7090;
+    --mono:      'Share Tech Mono', monospace;
+    --display:   'Orbitron', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 860px; margin: 0 auto;
+    padding: 28px 16px 60px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; margin-bottom: 28px; text-align: center;
+  }
+
+  .iss-svg {
+    width: 68px; height: 68px; margin-bottom: 2px;
+    animation: drift 18s ease-in-out infinite;
+    filter: drop-shadow(0 0 14px var(--teal));
+  }
+  @keyframes drift {
+    0%,100% { transform: translateX(-6px) rotate(-2deg); }
+    50%      { transform: translateX(6px)  rotate(2deg);  }
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(1.3rem, 4.5vw, 2rem);
+    font-weight: 900; letter-spacing: 0.1em; color: #fff;
+    text-shadow: 0 0 28px var(--teal-glow), 0 0 55px rgba(0,200,255,0.18);
+  }
+  .city-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--teal-dim); border: 1px solid var(--teal);
+    border-radius: 20px; padding: 5px 16px;
+    font-family: var(--display); font-size: 0.7rem;
+    font-weight: 700; letter-spacing: 0.2em;
+    color: var(--teal); text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .city-tag .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .coords-line {
+    font-size: 0.72rem; color: var(--text-dim);
+    letter-spacing: 0.18em; margin-top: 2px;
+  }
+
+  /* ── STATUS ── */
+  #status-bar {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.74rem; color: var(--text-dim);
+    min-height: 30px; margin-bottom: 18px; padding: 0 2px;
+  }
+  .sdot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text-dim); flex-shrink: 0;
+    transition: background .3s;
+  }
+  .sdot.ok      { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+  .sdot.err     { background: var(--red); }
+  .sdot.loading { background: var(--amber); animation: blink .55s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.1} }
+
+  /* ── LIVE PANEL ── */
+  #live-panel {
+    display: none;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+    backdrop-filter: blur(8px);
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 14px;
+  }
+  .live-item { display: flex; flex-direction: column; gap: 4px; }
+  .live-item .lbl {
+    font-size: 0.6rem; color: var(--text-dim);
+    letter-spacing: 0.22em; text-transform: uppercase;
+  }
+  .live-item .val {
+    font-family: var(--display); font-size: 0.92rem; font-weight: 700;
+  }
+  .val.teal  { color: var(--teal);  text-shadow: 0 0 10px var(--teal-dim); }
+  .val.green { color: var(--green); text-shadow: 0 0 10px rgba(0,255,136,.35); }
+  .val.amber { color: var(--amber); text-shadow: 0 0 10px rgba(255,179,0,.3); }
+
+  /* ── SECTION HEADER ── */
+  .section-title {
+    font-family: var(--display); font-size: 0.68rem; font-weight: 700;
+    color: var(--teal); letter-spacing: 0.3em; text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    margin-bottom: 14px; font-size: 0.67rem; color: var(--text-dim);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .ldot { width:8px; height:8px; border-radius:50%; }
+
+  /* ── PASS CARDS ── */
+  .pass-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 15px 18px;
+    margin-bottom: 11px;
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 10px 16px;
+    align-items: center;
+    position: relative; overflow: hidden;
+    transition: border-color .2s, box-shadow .2s;
+    backdrop-filter: blur(6px);
+  }
+  .pass-card::before {
+    content: ''; position: absolute;
+    left: 0; top: 0; bottom: 0; width: 3px;
+  }
+  .pass-card.good::before  { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .pass-card.fair::before  { background: var(--amber); }
+  .pass-card.poor::before  { background: var(--text-dim); }
+  .pass-card:hover { border-color: rgba(0,200,255,.3); box-shadow: 0 0 20px rgba(0,200,255,.07); }
+
+  /* card number */
+  .pass-num {
+    font-family: var(--display); font-size: 1.5rem; font-weight: 900;
+    color: var(--text-dim); text-align: center; line-height: 1;
+  }
+  .pass-card.good .pass-num { color: var(--green); text-shadow: 0 0 12px rgba(0,255,136,.4); }
+  .pass-card.fair .pass-num { color: var(--amber); }
+
+  /* card body */
+  .pass-body { display: flex; flex-direction: column; gap: 7px; }
+  .pass-date {
+    font-family: var(--display); font-size: 0.8rem; font-weight: 700;
+    color: #fff; letter-spacing: 0.04em;
+  }
+  .pass-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .chip { display: flex; gap: 5px; align-items: baseline; font-size: 0.69rem; }
+  .chip .lbl { color: var(--text-dim); text-transform: uppercase; letter-spacing: .14em; font-size: .62rem; }
+  .chip .val2 { color: var(--text); }
+
+  /* elevation arc */
+  .pass-elev { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .arc-wrap  { width: 52px; height: 27px; }
+  .arc-wrap svg { width: 100%; height: 100%; }
+  .elev-lbl  { font-family: var(--display); font-size: 0.73rem; font-weight: 700; text-align: center; }
+  .elev-lbl.good  { color: var(--green); }
+  .elev-lbl.fair  { color: var(--amber); }
+  .elev-lbl.poor  { color: var(--text-dim); }
+
+  /* countdown row */
+  .cdown-row {
+    grid-column: 1/-1;
+    border-top: 1px solid var(--border);
+    padding-top: 8px; margin-top: 1px;
+    font-size: 0.67rem; color: var(--text-dim);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .cdown {
+    font-family: var(--display); font-size: 0.73rem; color: var(--teal);
+  }
+  .cdown.now  { color: var(--green); font-weight: 700; text-shadow: 0 0 10px rgba(0,255,136,.5); animation: pulse 1s infinite; }
+  .cdown.soon { color: var(--green); }
+
+  /* ── LOADING SPINNER ── */
+  #spinner {
+    display: none; justify-content: center; align-items: center;
+    padding: 48px; flex-direction: column; gap: 16px;
+  }
+  .spin-ring {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 3px solid var(--border);
+    border-top-color: var(--teal);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin-txt { font-size: 0.75rem; color: var(--text-dim); letter-spacing: .15em; }
+
+  /* ── EMPTY ── */
+  .empty { text-align: center; padding: 48px 20px; color: var(--text-dim); font-size:.85rem; }
+  .empty .big { font-family: var(--display); font-size: 2.8rem; opacity:.12; margin-bottom:10px; }
+
+  /* ── RETRY BTN ── */
+  #retry-btn {
+    display: none; margin: 0 auto 24px;
+    font-family: var(--display); font-size: .72rem; font-weight: 700;
+    letter-spacing: .15em; text-transform: uppercase;
+    padding: 11px 28px; border-radius: 8px; border: 1px solid var(--teal);
+    background: var(--teal-dim); color: var(--teal); cursor: pointer;
+    transition: all .2s;
+  }
+  #retry-btn:hover { background: rgba(0,200,255,.28); box-shadow: 0 0 24px var(--teal-dim); }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; font-size: .63rem; color: var(--text-dim);
+    margin-top: 44px; line-height: 1.9;
+  }
+  footer a { color: var(--teal); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* scanlines */
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+    background: repeating-linear-gradient(
+      to bottom, transparent 0, transparent 3px,
+      rgba(0,0,0,.035) 3px, rgba(0,0,0,.035) 4px
+    );
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <svg class="iss-svg" viewBox="0 0 72 72" fill="none">
+      <!-- panneaux solaires gauche -->
+      <rect x="1" y="29" width="23" height="14" rx="2" fill="none" stroke="#00c8ff" stroke-width="1.5"/>
+      <line x1="7"  y1="29" x2="7"  y2="43" stroke="#00c8ff" stroke-width=".8" opacity=".45"/>
+      <line x1="13" y1="29" x2="13" y2="43" stroke="#00c8ff" stroke-width=".8" opacity=".45"/>
+      <line x1="19" y1="29" x2="19" y2="43" stroke="#00c8ff" stroke-width=".8" opacity=".45"/>
+      <!-- panneaux solaires droite -->
+      <rect x="48" y="29" width="23" height="14" rx="2" fill="none" stroke="#00c8ff" stroke-width="1.5"/>
+      <line x1="54" y1="29" x2="54" y2="43" stroke="#00c8ff" stroke-width=".8" opacity=".45"/>
+      <line x1="60" y1="29" x2="60" y2="43" stroke="#00c8ff" stroke-width=".8" opacity=".45"/>
+      <line x1="66" y1="29" x2="66" y2="43" stroke="#00c8ff" stroke-width=".8" opacity=".45"/>
+      <!-- poutre principale -->
+      <line x1="24" y1="36" x2="48" y2="36" stroke="#00c8ff" stroke-width="2.5"/>
+      <!-- modules -->
+      <rect x="27" y="27" width="18" height="18" rx="3" fill="rgba(0,200,255,.1)" stroke="#00c8ff" stroke-width="1.5"/>
+      <ellipse cx="36" cy="36" rx="7" ry="6" fill="rgba(0,200,255,.18)" stroke="#00ff88" stroke-width="1.2"/>
+      <!-- port d'amarrage -->
+      <line x1="36" y1="21" x2="36" y2="27" stroke="#00c8ff" stroke-width="1.5"/>
+      <circle cx="36" cy="20" r="2.5" fill="none" stroke="#00c8ff" stroke-width="1.2"/>
+      <!-- radiateurs -->
+      <rect x="33" y="9"  width="6" height="10" rx="1" fill="none" stroke="rgba(0,200,255,.45)" stroke-width="1"/>
+      <rect x="33" y="53" width="6" height="10" rx="1" fill="none" stroke="rgba(0,200,255,.45)" stroke-width="1"/>
+    </svg>
+
+    <h1>ISS TRACKER</h1>
+    <div class="city-tag"><div class="dot"></div>Les Sables-d'Olonne · Vendée</div>
+    <div class="coords-line">46.4967° N &nbsp;·&nbsp; 1.7834° O &nbsp;·&nbsp; alt. 5 m</div>
+  </header>
+
+  <!-- STATUS -->
+  <div id="status-bar">
+    <div class="sdot" id="sdot"></div>
+    <span id="stxt">Initialisation du calcul orbital…</span>
+  </div>
+
+  <!-- RETRY -->
+  <button id="retry-btn" onclick="init()">↺ Réessayer</button>
+
+  <!-- LIVE ISS -->
+  <div id="live-panel">
+    <div class="live-item">
+      <span class="lbl">🛰 Lat. ISS</span>
+      <span class="val teal" id="lv-lat">—</span>
+    </div>
+    <div class="live-item">
+      <span class="lbl">🛰 Lon. ISS</span>
+      <span class="val teal" id="lv-lon">—</span>
+    </div>
+    <div class="live-item">
+      <span class="lbl">🚀 Altitude</span>
+      <span class="val green" id="lv-alt">—</span>
+    </div>
+    <div class="live-item">
+      <span class="lbl">⚡ Vitesse</span>
+      <span class="val amber" id="lv-spd">—</span>
+    </div>
+    <div class="live-item">
+      <span class="lbl">📏 Distance</span>
+      <span class="val teal" id="lv-dst">—</span>
+    </div>
+  </div>
+
+  <!-- SPINNER -->
+  <div id="spinner">
+    <div class="spin-ring"></div>
+    <div class="spin-txt">Calcul SGP4 des passages en cours…</div>
+  </div>
+
+  <!-- PASSES -->
+  <div id="passes-section" style="display:none">
+    <div class="section-title">Passages prévus — 10 prochains jours</div>
+    <div class="legend">
+      <div class="legend-item"><div class="ldot" style="background:var(--green)"></div>Excellent (&gt; 60°)</div>
+      <div class="legend-item"><div class="ldot" style="background:var(--amber)"></div>Bon (30 – 60°)</div>
+      <div class="legend-item"><div class="ldot" style="background:var(--text-dim)"></div>Faible (&lt; 30°)</div>
+    </div>
+    <div id="passes-list"></div>
+  </div>
+
+  <footer>
+    Position fixe : Les Sables-d'Olonne (46.4967°N, 1.7834°O) &nbsp;·&nbsp;
+    Calcul orbital <a href="https://en.wikipedia.org/wiki/SGP4" target="_blank">SGP4</a> &nbsp;·&nbsp;
+    TLE frais : <a href="https://celestrak.org" target="_blank">CelesTrak</a><br>
+    L'ISS orbite à ~408 km d'altitude · 27 600 km/h · période ~92 min
+  </footer>
+
+</div><!-- /wrap -->
+
+<!-- satellite.js SGP4 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/4.1.3/satellite.min.js"></script>
+<script>
+'use strict';
+
+// ── Position fixe : Les Sables-d'Olonne ──────────────────────
+const OBS = {
+  lat:    46.4967,   // °N
+  lon:    -1.7834,   // °E (négatif = Ouest)
+  altKm:  0.005,     // ~5 m
+  name:   "Les Sables-d'Olonne"
+};
+
+// ── Variables globales ────────────────────────────────────────
+let satrec       = null;
+let passes       = [];
+let liveTimer    = null;
+let cdTimer      = null;
+
+// ── STARFIELD ────────────────────────────────────────────────
+(function starfield() {
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  let W, H, stars = [];
+
+  function resize() {
+    W = c.width  = window.innerWidth;
+    H = c.height = window.innerHeight;
+    stars = Array.from({ length: 260 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.3 + 0.2,
+      p: Math.random() * Math.PI * 2,
+      s: Math.random() * 0.007 + 0.002
+    }));
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    stars.forEach(s => {
+      s.p += s.s;
+      ctx.globalAlpha = (Math.sin(s.p) + 1) / 2 * 0.85 + 0.05;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize(); draw();
+})();
+
+// ── STATUS HELPERS ────────────────────────────────────────────
+function setStatus(type, msg) {
+  document.getElementById('sdot').className = 'sdot ' + type;
+  document.getElementById('stxt').textContent = msg;
+}
+function showRetry(show) {
+  document.getElementById('retry-btn').style.display = show ? 'block' : 'none';
+}
+function showSpinner(show) {
+  document.getElementById('spinner').style.display = show ? 'flex' : 'none';
+}
+
+// ── FETCH TLE (5 sources en cascade) ─────────────────────────
+async function fetchTLE() {
+  const TLE_URL  = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE';
+  const JSON_URL = 'https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=JSON';
+  const WTIA_URL = 'https://api.wheretheiss.at/v1/satellites/25544/tles';
+
+  const sources = [
+    { url: TLE_URL,                                                                  fmt: 'tle'  },
+    { url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(TLE_URL),      fmt: 'tle'  },
+    { url: 'https://corsproxy.io/?' + encodeURIComponent(TLE_URL),                  fmt: 'tle'  },
+    { url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(JSON_URL),     fmt: 'json' },
+    { url: WTIA_URL,                                                                 fmt: 'wtia' },
+  ];
+
+  for (const src of sources) {
+    try {
+      const res = await fetch(src.url, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+
+      if (src.fmt === 'json') {
+        const d = await res.json();
+        const item = Array.isArray(d) ? d[0] : d;
+        if (item?.TLE_LINE1 && item?.TLE_LINE2)
+          return { line1: item.TLE_LINE1.trim(), line2: item.TLE_LINE2.trim() };
+        continue;
+      }
+
+      if (src.fmt === 'wtia') {
+        const d = await res.json();
+        if (d?.line1 && d?.line2)
+          return { line1: d.line1.trim(), line2: d.line2.trim() };
+        continue;
+      }
+
+      // TLE texte brut
+      const text = await res.text();
+      const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean);
+      for (let i = 0; i < lines.length - 1; i++) {
+        if (lines[i].startsWith('1 25544') && lines[i+1].startsWith('2 25544'))
+          return { line1: lines[i], line2: lines[i+1] };
+        if ((lines[i].includes('ISS') || lines[i].includes('ZARYA')) && i + 2 < lines.length)
+          if (lines[i+1].startsWith('1 ') && lines[i+2].startsWith('2 '))
+            return { line1: lines[i+1], line2: lines[i+2] };
+      }
+      const idx = lines.findIndex(l => l.startsWith('1 '));
+      if (idx >= 0 && lines[idx+1]?.startsWith('2 '))
+        return { line1: lines[idx], line2: lines[idx+1] };
+
+    } catch(_) { /* source indisponible */ }
+  }
+  throw new Error('Impossible de récupérer les TLE ISS. Vérifiez votre connexion.');
+}
+
+// ── SGP4 : ÉLÉVATION & AZIMUT ────────────────────────────────
+const obsLatRad = satellite.degreesToRadians(OBS.lat);
+const obsLonRad = satellite.degreesToRadians(OBS.lon);
+
+function getElevAz(sat, date) {
+  const pv = satellite.propagate(sat, date);
+  if (!pv?.position) return null;
+  const gmst = satellite.gstime(date);
+  const ecf  = satellite.eciToEcf(pv.position, gmst);
+  const obs  = { longitude: obsLonRad, latitude: obsLatRad, height: OBS.altKm };
+  const look = satellite.ecfToLookAngles(obs, ecf);
+  return {
+    elev: satellite.radiansToDegrees(look.elevation),
+    az:   ((satellite.radiansToDegrees(look.azimuth) % 360) + 360) % 360,
+    pos:  satellite.eciToGeodetic(pv.position, gmst),
+    vel:  pv.velocity
+  };
+}
+
+// ── CALCUL DES PASSAGES ───────────────────────────────────────
+function computePasses(sat, days = 10) {
+  const MIN_EL = 10;   // élévation minimale en degrés
+  const COARSE = 30;   // pas grossier en secondes
+  const FINE   = 5;    // pas fin en secondes
+
+  const now = new Date();
+  const end = new Date(now.getTime() + days * 86400e3);
+  const result = [];
+
+  let t = new Date(now);
+  let inPass = false, passStart, maxEl, maxElTime, riseAz, setAz;
+
+  while (t < end) {
+    const r = getElevAz(sat, t);
+    if (!r) { t = new Date(t.getTime() + COARSE * 1e3); continue; }
+
+    if (!inPass && r.elev >= MIN_EL) {
+      // affinage de la montée (binary search)
+      inPass = true;
+      let lo = new Date(t.getTime() - COARSE * 1e3);
+      let hi = new Date(t.getTime());
+      for (let k = 0; k < 12; k++) {
+        const mid = new Date((lo.getTime() + hi.getTime()) / 2);
+        const rm  = getElevAz(sat, mid);
+        if (!rm) break;
+        rm.elev >= MIN_EL ? (hi = mid) : (lo = mid);
+      }
+      passStart = new Date(hi.getTime());
+      riseAz    = getElevAz(sat, passStart)?.az ?? 0;
+      maxEl     = r.elev;
+      maxElTime = new Date(t.getTime());
+    }
+
+    if (inPass) {
+      if (r.elev > maxEl) { maxEl = r.elev; maxElTime = new Date(t.getTime()); }
+
+      if (r.elev < MIN_EL) {
+        // affinage du coucher
+        let lo = new Date(t.getTime() - FINE * 1e3);
+        let hi = new Date(t.getTime());
+        for (let k = 0; k < 12; k++) {
+          const mid = new Date((lo.getTime() + hi.getTime()) / 2);
+          const rm  = getElevAz(sat, mid);
+          if (!rm) break;
+          rm.elev >= MIN_EL ? (lo = mid) : (hi = mid);
+        }
+        const passEnd = new Date(lo.getTime());
+        setAz = getElevAz(sat, passEnd)?.az ?? 0;
+
+        // affinage du pic
+        let bestEl = maxEl;
+        for (let dt = -90; dt <= 90; dt += FINE) {
+          const tt = new Date(maxElTime.getTime() + dt * 1e3);
+          const rr = getElevAz(sat, tt);
+          if (rr && rr.elev > bestEl) { bestEl = rr.elev; maxElTime = tt; }
+        }
+
+        result.push({
+          start:    passStart,
+          end:      passEnd,
+          peak:     maxElTime,
+          maxElev:  Math.round(bestEl * 10) / 10,
+          duration: Math.round((passEnd - passStart) / 1e3),
+          riseAz, setAz
+        });
+
+        inPass = false; maxEl = 0;
+        t = new Date(passEnd.getTime() + 90 * 1e3);
+        continue;
+      }
+    }
+
+    t = new Date(t.getTime() + (inPass ? FINE : COARSE) * 1e3);
+  }
+  return result;
+}
+
+// ── AFFICHAGE ────────────────────────────────────────────────
+function elevClass(e) { return e >= 60 ? 'good' : e >= 30 ? 'fair' : 'poor'; }
+
+function azDir(deg) {
+  const d = ['N','NNE','NE','ENE','E','ESE','SE','SSE',
+              'S','SSO','SO','OSO','O','ONO','NO','NNO'];
+  return d[Math.round(deg / 22.5) % 16];
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+}
+function fmtTime(d) {
+  return d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+function fmtDur(s) {
+  const m = Math.floor(s / 60), r = s % 60;
+  return m ? `${m} min ${r} s` : `${r} s`;
+}
+function fmtCountdown(ms) {
+  const s = Math.floor(ms / 1e3);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sc = s % 60;
+  if (d > 0) return `${d}j ${h}h ${String(m).padStart(2,'0')}m`;
+  if (h > 0) return `${h}h ${String(m).padStart(2,'0')}m ${String(sc).padStart(2,'0')}s`;
+  return `${String(m).padStart(2,'0')}m ${String(sc).padStart(2,'0')}s`;
+}
+
+function arcSVG(elev, cls) {
+  const pct = Math.min(elev / 90, 1);
+  const angle = (-180 + pct * 180) * Math.PI / 180;
+  const R = 22, cx = 27, cy = 26;
+  const ex = cx + R * Math.cos(angle);
+  const ey = cy + R * Math.sin(angle);
+  const color = cls === 'good' ? '#00ff88' : cls === 'fair' ? '#ffb300' : '#4a7090';
+  return `<svg viewBox="0 0 54 28" overflow="visible">
+    <path d="M5,26 A22,22 0 0,1 49,26" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="2"/>
+    <path d="M5,26 A22,22 0 0,1 ${ex.toFixed(2)},${ey.toFixed(2)}"
+          fill="none" stroke="${color}" stroke-width="2.5" opacity=".85"/>
+    <circle cx="${ex.toFixed(2)}" cy="${ey.toFixed(2)}" r="3" fill="${color}"/>
+    <line x1="5" y1="26" x2="49" y2="26" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  </svg>`;
+}
+
+function renderPasses(list) {
+  const sec  = document.getElementById('passes-section');
+  const cont = document.getElementById('passes-list');
+  sec.style.display = 'block';
+
+  if (!list.length) {
+    cont.innerHTML = `<div class="empty">
+      <div class="big">🛰</div>
+      <p>Aucun passage trouvé sur 10 jours.<br>
+         Cela peut arriver en fonction des périodes orbitales.</p>
+    </div>`;
+    return;
+  }
+
+  cont.innerHTML = list.map((p, i) => {
+    const cls = elevClass(p.maxElev);
+    return `<div class="pass-card ${cls}" id="pc${i}">
+      <div class="pass-num">${String(i+1).padStart(2,'0')}</div>
+
+      <div class="pass-body">
+        <div class="pass-date">${fmtDate(p.start)} — ${fmtTime(p.start)}</div>
+        <div class="pass-meta">
+          <div class="chip"><span class="lbl">Fin</span><span class="val2">${fmtTime(p.end)}</span></div>
+          <div class="chip"><span class="lbl">Durée</span><span class="val2">${fmtDur(p.duration)}</span></div>
+          <div class="chip"><span class="lbl">Levée</span><span class="val2">${Math.round(p.riseAz)}° ${azDir(p.riseAz)}</span></div>
+          <div class="chip"><span class="lbl">Coucher</span><span class="val2">${Math.round(p.setAz)}° ${azDir(p.setAz)}</span></div>
+          <div class="chip"><span class="lbl">Pic à</span><span class="val2">${fmtTime(p.peak)}</span></div>
+        </div>
+      </div>
+
+      <div class="pass-elev">
+        <div class="arc-wrap">${arcSVG(p.maxElev, cls)}</div>
+        <div class="elev-lbl ${cls}">${p.maxElev}°</div>
+      </div>
+
+      <div class="cdown-row">
+        ⏱ <span class="cdown" id="cd${i}">…</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── COUNTDOWNS ────────────────────────────────────────────────
+function startCountdowns() {
+  if (cdTimer) clearInterval(cdTimer);
+  updateCountdowns();
+  cdTimer = setInterval(updateCountdowns, 1000);
+}
+
+function updateCountdowns() {
+  const now = Date.now();
+  passes.forEach((p, i) => {
+    const el   = document.getElementById(`cd${i}`);
+    if (!el) return;
+    const diff = p.start.getTime() - now;
+
+    if (diff < 0 && now < p.end.getTime()) {
+      el.textContent = '🔴 EN COURS — fin dans ' + fmtCountdown(p.end.getTime() - now);
+      el.className   = 'cdown now';
+    } else if (diff < 0) {
+      el.textContent = 'Passé';
+      el.className   = 'cdown';
+      el.style.opacity = '.3';
+    } else {
+      el.textContent = (diff < 3600e3 ? '🟢 Dans ' : 'Dans ') + fmtCountdown(diff);
+      el.className   = diff < 3600e3 ? 'cdown soon' : 'cdown';
+    }
+  });
+}
+
+// ── LIVE ISS ──────────────────────────────────────────────────
+function startLive() {
+  const panel = document.getElementById('live-panel');
+  panel.style.display = 'grid';
+  updateLive();
+  liveTimer = setInterval(updateLive, 4000);
+}
+
+function updateLive() {
+  if (!satrec) return;
+  const now  = new Date();
+  const pv   = satellite.propagate(satrec, now);
+  if (!pv?.position) return;
+
+  const gmst = satellite.gstime(now);
+  const geo  = satellite.eciToGeodetic(pv.position, gmst);
+  const issLat = satellite.radiansToDegrees(geo.latitude);
+  const issLon = satellite.radiansToDegrees(geo.longitude);
+  const velKmh = Math.sqrt(pv.velocity.x**2 + pv.velocity.y**2 + pv.velocity.z**2) * 3600;
+
+  document.getElementById('lv-lat').textContent = `${issLat.toFixed(3)}° ${issLat >= 0 ? 'N' : 'S'}`;
+  document.getElementById('lv-lon').textContent = `${Math.abs(issLon).toFixed(3)}° ${issLon >= 0 ? 'E' : 'O'}`;
+  document.getElementById('lv-alt').textContent = `${geo.height.toFixed(0)} km`;
+  document.getElementById('lv-spd').textContent = `${Math.round(velKmh).toLocaleString('fr-FR')} km/h`;
+  document.getElementById('lv-dst').textContent = `${Math.round(haversine(OBS.lat, OBS.lon, issLat, issLon))} km`;
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371, d2r = Math.PI / 180;
+  const dLat = (lat2 - lat1) * d2r;
+  const dLon = (lon2 - lon1) * d2r;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*d2r)*Math.cos(lat2*d2r)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ── TLE EPOCH ────────────────────────────────────────────────
+function tleEpoch(line1) {
+  try {
+    const ep = line1.slice(18, 32).trim();
+    const yr = parseInt(ep.slice(0,2));
+    const y  = yr < 57 ? 2000 + yr : 1900 + yr;
+    const d  = parseFloat(ep.slice(2));
+    const dt = new Date(y, 0, 1);
+    dt.setTime(dt.getTime() + (d - 1) * 86400e3);
+    return dt.toLocaleDateString('fr-FR') + ' ' + dt.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}) + ' UTC';
+  } catch { return '—'; }
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+async function init() {
+  showRetry(false);
+  showSpinner(true);
+  document.getElementById('passes-section').style.display = 'none';
+  document.getElementById('live-panel').style.display     = 'none';
+  setStatus('loading', 'Récupération des données orbitales ISS (TLE) depuis CelesTrak…');
+
+  try {
+    const tle = await fetchTLE();
+    setStatus('loading', 'TLE reçu — calcul SGP4 des passages en cours…');
+
+    satrec = satellite.twoline2satrec(tle.line1, tle.line2);
+    passes = computePasses(satrec, 10);
+
+    showSpinner(false);
+
+    const epochStr = tleEpoch(tle.line1);
+    setStatus('ok',
+      `${passes.length} passage(s) trouvé(s) sur 10 jours · TLE du ${epochStr}`
+    );
+
+    renderPasses(passes);
+    startLive();
+    startCountdowns();
+
+  } catch (err) {
+    showSpinner(false);
+    setStatus('err', `Erreur : ${err.message}`);
+    showRetry(true);
+  }
+}
+
+// ── DÉMARRAGE ────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  if (typeof satellite === 'undefined') {
+    setStatus('err', 'Bibliothèque satellite.js non chargée. Vérifiez votre connexion.');
+    showRetry(true);
+    return;
+  }
+  init();
+});
+</script>
+</body>
+</html>
