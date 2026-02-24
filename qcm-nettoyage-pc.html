@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<title>QCM — Nettoyage PC Windows</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0f1117;
+  --bg2:       #161820;
+  --surface:   #1c1f2e;
+  --surface2:  #22263a;
+  --border:    rgba(255,255,255,0.08);
+  --border2:   rgba(255,255,255,0.14);
+  --accent:    #22c97a;
+  --accent2:   #0ea5c9;
+  --ok:        #22c97a;
+  --err:       #f75a5a;
+  --warn:      #f7b84f;
+  --text:      #e2e6f3;
+  --text2:     #8890aa;
+  --text3:     #555e7a;
+  --mono:      'DM Mono', monospace;
+  --display:   'Syne', sans-serif;
+  --body:      'DM Sans', sans-serif;
+  --radius:    14px;
+  --shadow:    0 4px 32px rgba(0,0,0,0.45);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  background-image:
+    linear-gradient(rgba(34,201,122,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,201,122,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.app {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+/* ── HEADER ── */
+.header { margin-bottom: 36px; animation: fadeUp 0.5s ease both; }
+
+.header-top {
+  display: flex; align-items: center;
+  gap: 14px; margin-bottom: 10px;
+}
+
+.logo-badge {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(34,201,122,0.3);
+}
+
+.header-meta { flex: 1; }
+
+.header-meta h1 {
+  font-family: var(--display);
+  font-size: clamp(1.2rem, 3.5vw, 1.75rem);
+  font-weight: 800; letter-spacing: -0.01em;
+  color: #fff; line-height: 1.1;
+}
+
+.header-meta .sub {
+  font-size: 0.78rem; color: var(--text2);
+  margin-top: 2px; font-family: var(--mono);
+}
+
+.score-pill {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 100px; padding: 6px 16px;
+  font-family: var(--mono); font-size: 0.78rem;
+  color: var(--text2); white-space: nowrap;
+}
+.score-pill .val { color: var(--accent); font-weight: 500; }
+
+.progress-wrap { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.progress-bar-bg {
+  flex: 1; height: 4px;
+  background: var(--surface2); border-radius: 10px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  width: 0%;
+}
+.progress-txt {
+  font-family: var(--mono); font-size: 0.72rem;
+  color: var(--text3); min-width: 52px; text-align: right;
+}
+
+/* ── QUESTION CARD ── */
+.question-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 28px 24px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.35s ease both;
+  position: relative; overflow: hidden;
+}
+.question-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  opacity: 0; transition: opacity 0.3s;
+}
+.question-card.active::before { opacity: 1; }
+
+.q-cat {
+  font-family: var(--mono); font-size: 0.62rem;
+  color: var(--text3); margin-bottom: 16px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  display: flex; align-items: center; gap: 6px;
+}
+.q-cat::before {
+  content: ''; display: inline-block;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--accent);
+}
+
+.q-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+
+.q-num {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 500;
+  color: var(--accent);
+  background: rgba(34,201,122,0.12);
+  border: 1px solid rgba(34,201,122,0.28);
+  border-radius: 6px; padding: 3px 8px;
+  white-space: nowrap; margin-top: 2px; flex-shrink: 0;
+}
+
+.q-text { font-size: 1rem; font-weight: 600; color: var(--text); line-height: 1.5; }
+
+/* ── OPTIONS ── */
+.options { display: flex; flex-direction: column; gap: 9px; }
+
+.option {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none; position: relative; overflow: hidden;
+}
+.option:hover:not(.disabled) {
+  border-color: var(--border2);
+  background: var(--surface2);
+  transform: translateX(3px);
+}
+.option.selected  { border-color: var(--accent);  background: rgba(34,201,122,0.08); }
+.option.correct   { border-color: var(--ok);      background: rgba(34,201,122,0.10); }
+.option.wrong     { border-color: var(--err);     background: rgba(247,90,90,0.10);  }
+.option.disabled  { cursor: default; }
+
+.option-letter {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 0.75rem; font-weight: 500;
+  color: var(--text2); flex-shrink: 0; transition: all 0.18s;
+}
+.option.selected .option-letter { background: var(--accent); border-color: var(--accent); color: #fff; }
+.option.correct  .option-letter { background: var(--ok);     border-color: var(--ok);     color: #fff; }
+.option.wrong    .option-letter { background: var(--err);    border-color: var(--err);    color: #fff; }
+
+.option-text  { font-size: 0.9rem; color: var(--text); line-height: 1.4; flex: 1; }
+.option-icon  { font-size: 1rem; flex-shrink: 0; opacity: 0; transition: opacity 0.2s; }
+.option.correct .option-icon,
+.option.wrong   .option-icon { opacity: 1; }
+
+/* ── EXPLANATION ── */
+.explanation {
+  margin-top: 14px; padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.83rem; color: var(--text2);
+  line-height: 1.55; display: none;
+  animation: fadeIn 0.3s ease;
+}
+.explanation.show { display: block; }
+.explanation strong { color: var(--text); }
+
+/* ── NAVIGATION ── */
+.nav-row {
+  display: flex; gap: 10px; margin-top: 20px;
+  justify-content: space-between; align-items: center; flex-wrap: wrap;
+}
+
+.btn {
+  font-family: var(--body); font-size: 0.85rem; font-weight: 600;
+  padding: 10px 22px; border-radius: 9px; border: none;
+  cursor: pointer; transition: all 0.18s;
+  display: flex; align-items: center; gap: 7px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; box-shadow: 0 2px 16px rgba(34,201,122,0.3);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 22px rgba(34,201,122,0.4); }
+.btn-primary:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
+.btn-ghost {
+  background: transparent; border: 1.5px solid var(--border2); color: var(--text2);
+}
+.btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+.btn-ghost:disabled { opacity: 0.3; cursor: default; }
+
+/* ── RESULTS ── */
+#results-screen { display: none; animation: fadeUp 0.5s ease; }
+
+.results-hero {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 36px 28px;
+  text-align: center; margin-bottom: 20px;
+  box-shadow: var(--shadow); position: relative; overflow: hidden;
+}
+.results-hero::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(34,201,122,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.score-ring { width: 120px; height: 120px; margin: 0 auto 20px; position: relative; }
+.score-ring svg { transform: rotate(-90deg); }
+.score-ring-text {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: var(--display);
+}
+.score-ring-text .big { font-size: 1.9rem; font-weight: 800; color: #fff; line-height: 1; }
+.score-ring-text .small { font-size: 0.65rem; color: var(--text2); font-family: var(--mono); }
+
+.results-title { font-family: var(--display); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.results-msg   { font-size: 0.9rem; color: var(--text2); margin-bottom: 24px; }
+
+.stats-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+.stat-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 20px; text-align: center; min-width: 90px;
+}
+.stat-box .sv { font-family: var(--display); font-size: 1.4rem; font-weight: 800; line-height: 1; }
+.stat-box .sl { font-size: 0.68rem; color: var(--text2); font-family: var(--mono); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.1em; }
+.sv.ok   { color: var(--ok); }
+.sv.err  { color: var(--err); }
+.sv.warn { color: var(--warn); }
+
+/* ── REVIEW ── */
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.filter-btn {
+  font-family: var(--mono); font-size: 0.7rem;
+  padding: 4px 12px; border-radius: 100px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
+}
+.filter-btn.active, .filter-btn:hover {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+
+.review-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;
+  display: flex; gap: 12px; align-items: flex-start;
+  cursor: pointer; transition: border-color .15s;
+}
+.review-item:hover { border-color: var(--border2); }
+.review-icon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+.review-body { flex: 1; }
+.review-q  { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 4px; line-height: 1.4; }
+.review-ans { font-size: 0.78rem; color: var(--text2); font-family: var(--mono); }
+.review-ans .correct-ans { color: var(--ok); }
+.review-ans .wrong-ans   { color: var(--err); }
+
+/* ── INTRO ── */
+#intro-screen { animation: fadeUp 0.5s ease; }
+
+.intro-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 40px 32px;
+  text-align: center; box-shadow: var(--shadow);
+  position: relative; overflow: hidden;
+}
+.intro-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+}
+.intro-emoji { font-size: 3.5rem; margin-bottom: 16px; display: block; }
+.intro-card h2 { font-family: var(--display); font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 10px; }
+.intro-card p  { font-size: 0.9rem; color: var(--text2); max-width: 500px; margin: 0 auto 24px; line-height: 1.6; }
+
+.intro-chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px; }
+.chip {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 100px; padding: 5px 14px;
+  font-size: 0.78rem; color: var(--text2); font-family: var(--mono);
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp  { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
+@keyframes pop     { 0%{transform:scale(1)} 50%{transform:scale(1.04)} 100%{transform:scale(1)} }
+
+.pop { animation: pop 0.2s ease; }
+
+@media (max-width: 500px) {
+  .app { padding: 20px 14px 60px; }
+  .question-card, .intro-card { padding: 20px 16px; }
+  .nav-row { flex-direction: column-reverse; }
+  .btn { width: 100%; justify-content: center; }
+  .header-top { flex-wrap: wrap; }
+  .score-pill { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header" id="main-header" style="display:none">
+    <div class="header-top">
+      <div class="logo-badge">🧹</div>
+      <div class="header-meta">
+        <h1>QCM — Nettoyage PC Windows</h1>
+        <div class="sub">Évaluation des connaissances · 30 questions</div>
+      </div>
+      <div class="score-pill">Score : <span class="val" id="live-score">0 / 0</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="prog-fill"></div>
+      </div>
+      <div class="progress-txt" id="prog-txt">0 / 30</div>
+    </div>
+  </div>
+
+  <!-- INTRO -->
+  <div id="intro-screen">
+    <div class="intro-card">
+      <span class="intro-emoji">🧹</span>
+      <h2>QCM — Nettoyage PC Windows</h2>
+      <p>Testez vos connaissances sur l'entretien et l'optimisation d'un PC sous Windows : nettoyage des fichiers, registre, démarrage, sécurité, disque dur et bonnes pratiques.</p>
+      <div class="intro-chips">
+        <div class="chip">📋 30 questions</div>
+        <div class="chip">🏷 6 catégories</div>
+        <div class="chip">💡 Explications détaillées</div>
+        <div class="chip">🎯 Score en temps réel</div>
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()" style="margin:0 auto">
+        Commencer le QCM →
+      </button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz-screen" style="display:none">
+    <div id="question-container"></div>
+  </div>
+
+  <!-- RÉSULTATS -->
+  <div id="results-screen">
+    <div class="results-hero">
+      <div class="score-ring">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+          <circle cx="60" cy="60" r="52" fill="none" stroke="url(#rg)" stroke-width="10"
+                  stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7" id="ring-arc"/>
+          <defs>
+            <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#22c97a"/>
+              <stop offset="100%" stop-color="#0ea5c9"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="score-ring-text">
+          <div class="big"  id="res-pct">—</div>
+          <div class="small">SCORE</div>
+        </div>
+      </div>
+      <div class="results-title" id="res-title">—</div>
+      <div class="results-msg"   id="res-msg">—</div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="sv ok"   id="res-ok">—</div><div class="sl">Correctes</div></div>
+        <div class="stat-box"><div class="sv err"  id="res-err">—</div><div class="sl">Incorrectes</div></div>
+        <div class="stat-box"><div class="sv warn" id="res-skip">—</div><div class="sl">Ignorées</div></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="restartQuiz()">↺ Recommencer</button>
+        <button class="btn btn-ghost"   onclick="showReview()">📋 Voir le corrigé</button>
+      </div>
+    </div>
+
+    <div id="review-area" style="display:none">
+      <div class="filter-bar" id="review-filters">
+        <button class="filter-btn active" onclick="filterReview('all',this)">Toutes (30)</button>
+        <button class="filter-btn" onclick="filterReview('wrong',this)">❌ Incorrectes</button>
+        <button class="filter-btn" onclick="filterReview('ok',this)">✅ Correctes</button>
+        <button class="filter-btn" onclick="filterReview('skip',this)">⏭ Ignorées</button>
+      </div>
+      <div id="review-list"></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  30 QUESTIONS — NETTOYAGE PC WINDOWS
+// ═══════════════════════════════════════════════════════════════
+const QUESTIONS = [
+
+  // ── 1. FICHIERS TEMPORAIRES & ESPACE DISQUE (5 questions) ──
+  {
+    cat: "Fichiers temporaires & Espace disque",
+    q: "Quel outil Windows intégré permet de supprimer les fichiers temporaires, la corbeille et les fichiers inutiles en quelques clics ?",
+    opts: ["Défragmenteur de disque", "Nettoyage de disque (cleanmgr)", "Gestionnaire de tâches", "Éditeur de registre"],
+    ans: 1,
+    exp: "<strong>Le Nettoyage de disque (cleanmgr.exe)</strong> est l'outil intégré à Windows pour supprimer les fichiers temporaires, le contenu de la corbeille, les miniatures, les fichiers Internet temporaires, etc. Accessible via Démarrer > Nettoyage de disque ou en tapant <em>cleanmgr</em> dans la barre de recherche."
+  },
+  {
+    cat: "Fichiers temporaires & Espace disque",
+    q: "Dans quel dossier Windows stocke-t-il les fichiers temporaires de l'utilisateur ?",
+    opts: ["C:\\Windows\\Temp", "C:\\Users\\[Nom]\\AppData\\Local\\Temp", "C:\\ProgramData\\Temp", "C:\\Windows\\System32\\Temp"],
+    ans: 1,
+    exp: "<strong>C:\\Users\\[Votre nom]\\AppData\\Local\\Temp</strong> (ou %TEMP% dans l'Explorateur) contient les fichiers temporaires de l'utilisateur. Le dossier <em>C:\\Windows\\Temp</em> contient les temporaires système. On peut vider les deux manuellement ou via le Nettoyage de disque."
+  },
+  {
+    cat: "Fichiers temporaires & Espace disque",
+    q: "Comment accéder rapidement au dossier des fichiers temporaires depuis la boîte d'exécution (Win+R) ?",
+    opts: ["temp", "%tmp%", "cleanup", "tmpdir"],
+    ans: 1,
+    exp: "<strong>%tmp%</strong> (ou <strong>%temp%</strong>) saisi dans Win+R ouvre directement le dossier des fichiers temporaires de l'utilisateur courant. Vous pouvez ensuite sélectionner tout (Ctrl+A) et supprimer (Suppr). Certains fichiers en cours d'utilisation ne pourront pas être supprimés — ignorez-les."
+  },
+  {
+    cat: "Fichiers temporaires & Espace disque",
+    q: "Quelle fonctionnalité de Windows 10/11 nettoie automatiquement les fichiers temporaires et libère de l'espace en arrière-plan ?",
+    opts: ["Windows Defender", "Sens du stockage (Storage Sense)", "Optimisation des lecteurs", "Nettoyage de disque avancé"],
+    ans: 1,
+    exp: "<strong>Le Sens du stockage (Storage Sense)</strong> est une fonctionnalité de Windows 10/11 qui supprime automatiquement les fichiers temporaires, vide la corbeille et nettoie le dossier Téléchargements selon un calendrier configurable. Accessible dans Paramètres > Système > Stockage."
+  },
+  {
+    cat: "Fichiers temporaires & Espace disque",
+    q: "Que contient généralement le dossier « Windows.old » présent sur C:\\ après une mise à jour majeure de Windows ?",
+    opts: ["Les sauvegardes des drivers", "L'ancienne version de Windows (récupérable pendant 10 jours)", "Les fichiers de restauration système", "Les anciennes mises à jour de sécurité"],
+    ans: 1,
+    exp: "<strong>Windows.old</strong> contient l'intégralité de l'ancienne version de Windows, permettant un retour arrière pendant 10 jours. Il peut peser plusieurs Go (parfois 20 à 30 Go). Le Nettoyage de disque > « Nettoyer les fichiers système » permet de le supprimer définitivement une fois que vous êtes satisfait de la nouvelle version."
+  },
+
+  // ── 2. PROGRAMMES & DÉMARRAGE (5 questions) ──
+  {
+    cat: "Programmes & Démarrage",
+    q: "Comment accéder à la liste des programmes qui se lancent automatiquement au démarrage de Windows 10/11 ?",
+    opts: ["Panneau de configuration > Programmes", "Gestionnaire des tâches > onglet Démarrage", "msconfig > onglet Démarrage", "Les deux réponses B et C sont correctes"],
+    ans: 3,
+    exp: "<strong>Les deux méthodes fonctionnent :</strong> le <em>Gestionnaire des tâches (Ctrl+Maj+Échap) > onglet Démarrage</em> est la méthode recommandée sur Windows 10/11. Sous Windows 10/11, <em>msconfig</em> redirige vers le Gestionnaire des tâches pour les programmes de démarrage. Les deux permettent d'activer/désactiver les programmes au démarrage."
+  },
+  {
+    cat: "Programmes & Démarrage",
+    q: "Quel est l'impact de désactiver des programmes inutiles au démarrage ?",
+    opts: ["Aucun impact visible", "Accélère le démarrage de Windows et libère de la RAM", "Risque d'endommager Windows", "Ralentit le démarrage mais accélère les applications"],
+    ans: 1,
+    exp: "<strong>Désactiver les programmes inutiles au démarrage</strong> accélère sensiblement le boot de Windows et libère de la mémoire RAM pour vos applications. Des logiciels comme Spotify, Teams, Discord, OneDrive s'y cachent souvent. Désactiver un programme du démarrage ne le désinstalle pas — il reste accessible manuellement."
+  },
+  {
+    cat: "Programmes & Démarrage",
+    q: "Quelle commande Windows permet de désinstaller proprement un programme via le Panneau de configuration ?",
+    opts: ["appwiz.cpl", "programs.cpl", "uninstall.exe", "control add"],
+    ans: 0,
+    exp: "<strong>appwiz.cpl</strong> saisi dans Win+R ouvre directement la fenêtre « Programmes et fonctionnalités » du Panneau de configuration, permettant de désinstaller, modifier ou réparer des programmes installés sur votre PC."
+  },
+  {
+    cat: "Programmes & Démarrage",
+    q: "Après avoir désinstallé un programme, que peut-il rester sur le PC ?",
+    opts: ["Rien, la désinstallation est toujours complète", "Des entrées de registre et des dossiers résiduels dans AppData", "Uniquement des raccourcis sur le bureau", "Des fichiers uniquement dans C:\\Program Files"],
+    ans: 1,
+    exp: "<strong>La désinstallation laisse souvent des résidus</strong> : entrées dans le registre Windows, dossiers dans <em>C:\\Users\\[Nom]\\AppData</em>, fichiers de configuration, clés de licence. Des outils comme <em>Revo Uninstaller</em> ou <em>IObit Uninstaller</em> effectuent un nettoyage plus complet qu'un désinstalleur standard."
+  },
+  {
+    cat: "Programmes & Démarrage",
+    q: "Quel outil tiers gratuit est reconnu pour effectuer une désinstallation approfondie avec nettoyage des résidus ?",
+    opts: ["CCleaner", "Revo Uninstaller Free", "Glary Utilities", "Advanced SystemCare"],
+    ans: 1,
+    exp: "<strong>Revo Uninstaller Free</strong> est l'outil de référence pour la désinstallation approfondie. Après avoir lancé le désinstalleur officiel du programme, il analyse le registre et les dossiers pour trouver et supprimer tous les résidus laissés. Il existe en version portable (sans installation)."
+  },
+
+  // ── 3. NETTOYAGE DU REGISTRE & SYSTÈME (5 questions) ──
+  {
+    cat: "Registre & Système",
+    q: "Qu'est-ce que le registre Windows ?",
+    opts: ["Un journal des erreurs systèmes", "Une base de données centrale stockant les paramètres de Windows et des applications", "Un dossier contenant les fichiers de configuration (.ini)", "Un outil de sauvegarde automatique de Windows"],
+    ans: 1,
+    exp: "<strong>Le registre Windows</strong> est une base de données hiérarchique (ruches : HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER…) qui stocke tous les paramètres de configuration de Windows et des applications installées. Il s'édite avec <em>regedit</em>, mais toute modification incorrecte peut déstabiliser le système."
+  },
+  {
+    cat: "Registre & Système",
+    q: "Est-il recommandé de nettoyer le registre Windows manuellement ou avec un outil tiers pour améliorer les performances ?",
+    opts: ["Oui, indispensable tous les mois", "Oui, avec un outil fiable comme CCleaner", "Non, le gain est négligeable et le risque réel d'instabilité existe", "Oui, cela double la vitesse du PC"],
+    ans: 2,
+    exp: "<strong>Microsoft déconseille le nettoyage du registre</strong> : le gain de performances est quasi nul sur un PC moderne, et certains nettoyeurs suppriment des clés encore utilisées, causant des plantages. Windows gère lui-même les entrées obsolètes. Seuls les résidus post-désinstallation méritent attention, et uniquement manuellement si vous savez ce que vous faites."
+  },
+  {
+    cat: "Registre & Système",
+    q: "Quelle commande Windows permet de vérifier et réparer les fichiers système corrompus ?",
+    opts: ["chkdsk /f", "sfc /scannow", "dism /cleanup", "repair /windows"],
+    ans: 1,
+    exp: "<strong>sfc /scannow</strong> (System File Checker) vérifie l'intégrité de tous les fichiers système protégés et remplace les fichiers corrompus. À lancer dans une invite de commandes en <em>administrateur</em>. Si des erreurs persistent, compléter avec <em>DISM /Online /Cleanup-Image /RestoreHealth</em>."
+  },
+  {
+    cat: "Registre & Système",
+    q: "Quelle commande vérifie et répare les erreurs sur un disque dur sous Windows ?",
+    opts: ["sfc /disk", "chkdsk C: /f /r", "repair-disk /auto", "scandisk /fix"],
+    ans: 1,
+    exp: "<strong>chkdsk C: /f /r</strong> vérifie le disque C: pour des erreurs logiques (/f = répare les erreurs) et des secteurs défectueux (/r = localise et récupère les données). Sur un disque en cours d'utilisation, Windows proposera de lancer la vérification au prochain redémarrage. À exécuter en administrateur."
+  },
+  {
+    cat: "Registre & Système",
+    q: "Quel est le rôle de l'outil DISM (Deployment Image Servicing and Management) ?",
+    opts: ["Défragmenter le disque système", "Réparer l'image Windows utilisée par sfc /scannow", "Nettoyer les fichiers temporaires système", "Désinstaller les mises à jour problématiques"],
+    ans: 1,
+    exp: "<strong>DISM</strong> répare l'image Windows elle-même, que sfc /scannow utilise comme source de référence. Commande : <em>DISM /Online /Cleanup-Image /RestoreHealth</em>. À utiliser quand sfc /scannow signale des erreurs qu'il ne peut pas réparer. DISM télécharge les fichiers manquants depuis Windows Update."
+  },
+
+  // ── 4. SÉCURITÉ & MALWARES (5 questions) ──
+  {
+    cat: "Sécurité & Malwares",
+    q: "Quel antivirus est intégré nativement dans Windows 10 et 11 ?",
+    opts: ["Microsoft Security Essentials", "Windows Defender (Microsoft Defender Antivirus)", "Malwarebytes", "Norton 360"],
+    ans: 1,
+    exp: "<strong>Windows Defender (Microsoft Defender Antivirus)</strong> est l'antivirus intégré à Windows 10/11. Il offre une protection en temps réel, une analyse à la demande et des mises à jour automatiques. Pour un usage personnel, il est suffisant et rivalise avec les solutions payantes selon les tests indépendants (AV-TEST, AV-Comparatives)."
+  },
+  {
+    cat: "Sécurité & Malwares",
+    q: "Quel outil gratuit est recommandé pour une analyse anti-malware complémentaire à l'antivirus principal ?",
+    opts: ["CCleaner", "Malwarebytes Free (analyse à la demande)", "Revo Uninstaller", "Glary Utilities"],
+    ans: 1,
+    exp: "<strong>Malwarebytes Free</strong> est le standard de référence pour une analyse anti-malware secondaire. Il détecte des menaces (PUP, adware, spyware, rootkits) que les antivirus traditionnels manquent parfois. La version gratuite permet les analyses manuelles ; la version payante ajoute la protection en temps réel."
+  },
+  {
+    cat: "Sécurité & Malwares",
+    q: "Quel signe peut indiquer qu'un PC est infecté par un malware ?",
+    opts: ["Le PC démarre plus lentement que d'habitude", "Des publicités pop-up apparaissent même sans navigateur ouvert", "La page d'accueil du navigateur a changé sans action de l'utilisateur", "Toutes ces réponses sont correctes"],
+    ans: 3,
+    exp: "<strong>Tous ces signes peuvent indiquer une infection :</strong> ralentissement inexpliqué, publicités intempestives (adware), modifications du navigateur (hijacker), processus inconnus dans le Gestionnaire des tâches, activité disque ou réseau élevée au repos. En cas de doute, lancer une analyse Malwarebytes + Windows Defender."
+  },
+  {
+    cat: "Sécurité & Malwares",
+    q: "Que signifie PUP dans le contexte de la sécurité informatique ?",
+    opts: ["Programme Utilisateur Principal", "Potentially Unwanted Program (Programme potentiellement indésirable)", "Protected User Profile", "Primary Update Package"],
+    ans: 1,
+    exp: "<strong>PUP (Potentially Unwanted Program)</strong> désigne un programme installé à l'insu de l'utilisateur, souvent bundlé avec un autre logiciel gratuit. Exemples : barres d'outils de navigateur, optimiseurs système douteux, adware. Ils ne sont pas toujours dangereux mais consomment des ressources et sont indésirables."
+  },
+  {
+    cat: "Sécurité & Malwares",
+    q: "Quelle bonne pratique réduit le risque d'infection lors de l'installation d'un logiciel gratuit ?",
+    opts: ["Toujours choisir l'installation rapide (Express)", "Choisir l'installation personnalisée et décocher les logiciels supplémentaires proposés", "Désactiver l'antivirus pendant l'installation", "Télécharger uniquement depuis des sites de téléchargement populaires comme Softonic"],
+    ans: 1,
+    exp: "<strong>Toujours choisir l'installation personnalisée (Custom)</strong> pour voir et décocher les logiciels tiers proposés en bundle (barres d'outils, antivirus tiers, optimiseurs). L'installation rapide accepte tout par défaut. Téléchargez de préférence directement sur le site officiel de l'éditeur pour éviter les packages modifiés."
+  },
+
+  // ── 5. PERFORMANCES & MÉMOIRE (5 questions) ──
+  {
+    cat: "Performances & Mémoire",
+    q: "Quel outil Windows affiche en temps réel la consommation CPU, RAM, disque et réseau de chaque processus ?",
+    opts: ["Moniteur de fiabilité", "Gestionnaire des tâches (Ctrl+Maj+Échap)", "Observateur d'événements", "Analyseur de performances"],
+    ans: 1,
+    exp: "<strong>Le Gestionnaire des tâches (Ctrl+Maj+Échap)</strong> affiche en temps réel la consommation de chaque processus (CPU, RAM, disque, réseau, GPU). L'onglet Performances donne une vue graphique globale. C'est l'outil de diagnostic rapide de première intention pour identifier un processus gourmand."
+  },
+  {
+    cat: "Performances & Mémoire",
+    q: "Que se passe-t-il quand la RAM est saturée sous Windows ?",
+    opts: ["Le PC s'éteint automatiquement", "Windows utilise le fichier d'échange (pagefile) sur le disque, ce qui ralentit le système", "Les applications les moins importantes se ferment automatiquement", "Windows libère automatiquement la RAM en supprimant les fichiers temporaires"],
+    ans: 1,
+    exp: "<strong>Quand la RAM est saturée</strong>, Windows utilise le <em>fichier d'échange (pagefile.sys)</em> sur le disque dur comme mémoire virtuelle. Comme le disque est bien plus lent que la RAM, les performances chutent drastiquement. Sur un PC avec un HDD, cela se traduit par une activité disque constante et un système quasi bloqué."
+  },
+  {
+    cat: "Performances & Mémoire",
+    q: "Quel est l'avantage principal de remplacer un disque dur (HDD) par un SSD pour les performances de Windows ?",
+    opts: ["Consommation électrique réduite uniquement", "Démarrage de Windows, lancement d'applications et chargements jusqu'à 5-10x plus rapides", "Meilleure qualité sonore du PC", "Capacité de stockage doublée pour le même prix"],
+    ans: 1,
+    exp: "<strong>Un SSD est la mise à niveau numéro 1</strong> pour un PC lent. Les SSD sont 5 à 10 fois plus rapides qu'un HDD pour les lectures/écritures aléatoires (ce que fait Windows en permanence). Le démarrage passe de 1-2 minutes à 10-15 secondes, les applications s'ouvrent quasi instantanément."
+  },
+  {
+    cat: "Performances & Mémoire",
+    q: "Quelle option Windows permet de choisir entre « Privilégier les performances » et « Privilégier l'apparence » (effets visuels) ?",
+    opts: ["Paramètres > Affichage > Résolution", "Système > À propos > Paramètres système avancés > Paramètres de performances", "Panneau de config > Centre de mobilité", "Gestionnaire de tâches > onglet Performance"],
+    ans: 1,
+    exp: "<strong>Système > Paramètres système avancés > Performances > Paramètres</strong> permet de désactiver les effets visuels (animations, transparences, ombres). Choisir « Ajuster afin d'obtenir les meilleures performances » désactive tous les effets. Gain sensible surtout sur les PC anciens avec peu de RAM ou GPU intégré faible."
+  },
+  {
+    cat: "Performances & Mémoire",
+    q: "À quelle fréquence est-il recommandé de redémarrer un PC Windows pour maintenir ses performances ?",
+    opts: ["Jamais, il vaut mieux toujours le laisser en veille", "Au moins une fois par semaine ou quand Windows le demande", "Uniquement lors des mises à jour", "Tous les jours obligatoirement"],
+    ans: 1,
+    exp: "<strong>Redémarrer au moins une fois par semaine</strong> (ou quand Windows le demande après une mise à jour) est une bonne pratique. Le redémarrage vide la RAM, efface les fichiers temporaires en cours, applique les mises à jour en attente et remet à zéro les services qui peuvent dériver. La mise en veille ne remplace pas le redémarrage."
+  },
+
+  // ── 6. DISQUE DUR & MAINTENANCE MATÉRIELLE (5 questions) ──
+  {
+    cat: "Disque dur & Maintenance",
+    q: "La défragmentation du disque est-elle utile sur un SSD ?",
+    opts: ["Oui, indispensable tous les mois", "Oui, mais seulement une fois par an", "Non, inutile et potentiellement nocif (usure des cellules)", "Non, car les SSD ne fragmentent jamais les données"],
+    ans: 2,
+    exp: "<strong>Ne jamais défragmenter un SSD !</strong> La défragmentation effectue un grand nombre d'écritures inutiles qui usent les cellules flash du SSD sans apporter aucun gain (les SSD n'ont pas de tête de lecture physique). Windows le sait et remplace automatiquement la défragmentation par l'<em>optimisation TRIM</em> sur les SSD."
+  },
+  {
+    cat: "Disque dur & Maintenance",
+    q: "Quel outil Windows vérifie l'état de santé d'un disque dur via la technologie S.M.A.R.T. ?",
+    opts: ["chkdsk", "CrystalDiskInfo (tiers) ou wmic dans l'invite de commandes", "Nettoyage de disque", "Défragmenteur de disque"],
+    ans: 1,
+    exp: "<strong>S.M.A.R.T. (Self-Monitoring, Analysis and Reporting Technology)</strong> est un système intégré aux disques qui surveille leur santé. <em>CrystalDiskInfo</em> (gratuit) affiche le statut S.M.A.R.T. de façon lisible (Bon / Attention / Mauvais). Windows peut aussi interroger le S.M.A.R.T. via : <em>wmic diskdrive get status</em> dans l'invite de commandes."
+  },
+  {
+    cat: "Disque dur & Maintenance",
+    q: "Quel pourcentage d'espace libre minimum est recommandé sur le disque système (C:\\) pour un bon fonctionnement de Windows ?",
+    opts: ["Au moins 2 Go libres", "Au moins 10-15% de la capacité totale", "Au moins 50% de la capacité totale", "L'espace libre n'influence pas les performances"],
+    ans: 1,
+    exp: "<strong>Maintenir au moins 10-15% d'espace libre</strong> sur le disque système est recommandé. Windows a besoin d'espace pour le fichier d'échange, les fichiers temporaires, les mises à jour et les points de restauration. En dessous de 10%, les performances se dégradent et les mises à jour peuvent échouer."
+  },
+  {
+    cat: "Disque dur & Maintenance",
+    q: "Qu'est-ce qu'un point de restauration Windows et pourquoi est-il important avant un nettoyage ?",
+    opts: ["Une sauvegarde complète du disque dur", "Un instantané de l'état du système permettant d'annuler des modifications en cas de problème", "Une copie de sauvegarde de vos documents personnels", "Un point de démarrage d'urgence sur clé USB"],
+    ans: 1,
+    exp: "<strong>Un point de restauration</strong> sauvegarde l'état du registre, des fichiers système et des paramètres à un instant T. En cas de problème après un nettoyage ou une modification, Windows peut revenir à cet état via Panneau de config > Système > Protection du système > Restauration du système. Créez-en un avant tout nettoyage important."
+  },
+  {
+    cat: "Disque dur & Maintenance",
+    q: "Quelle action simple permet de nettoyer physiquement un PC fixe pour éviter la surchauffe et les ralentissements ?",
+    opts: ["Formater le disque dur régulièrement", "Dépoussiérer l'intérieur du boîtier (ventilateurs, radiateurs) avec de l'air comprimé", "Remplacer le câble d'alimentation", "Désinstaller les pilotes graphiques"],
+    ans: 1,
+    exp: "<strong>Le dépoussiérage physique</strong> est souvent négligé mais crucial : la poussière obstrue les ventilateurs et les radiateurs, provoquant une montée en température du processeur et de la carte graphique. En surchauffe, le PC réduit automatiquement ses performances (throttling) ou s'éteint brusquement. Un nettoyage annuel à l'air comprimé suffit généralement."
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let state = {
+  current:  0,
+  answers:  new Array(30).fill(null),
+  answered: new Array(30).fill(false),
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════
+function $(id) { return document.getElementById(id); }
+const LETTERS = ['A','B','C','D'];
+
+// ═══════════════════════════════════════════════════════════════
+//  QUIZ LOGIC
+// ═══════════════════════════════════════════════════════════════
+function startQuiz() {
+  $('intro-screen').style.display = 'none';
+  $('main-header').style.display  = 'block';
+  $('quiz-screen').style.display  = 'block';
+  state = {
+    current:  0,
+    answers:  new Array(30).fill(null),
+    answered: new Array(30).fill(false),
+  };
+  renderQuestion(0);
+  updateHeader();
+}
+
+function renderQuestion(idx) {
+  const q    = QUESTIONS[idx];
+  const ans  = state.answers[idx];
+  const done = state.answered[idx];
+
+  $('question-container').innerHTML = `
+    <div class="question-card active">
+      <div class="q-cat">${q.cat}</div>
+      <div class="q-header">
+        <div class="q-num">Q${String(idx+1).padStart(2,'0')}</div>
+        <div class="q-text">${q.q}</div>
+      </div>
+      <div class="options" id="opts">
+        ${q.opts.map((opt, i) => {
+          let cls = '';
+          if (done) {
+            cls = 'disabled';
+            if (i === q.ans)               cls += ' correct';
+            else if (ans === i)            cls += ' wrong';
+          } else if (ans === i) cls = 'selected';
+
+          const icon = done
+            ? (i === q.ans ? '✅' : (ans === i && ans !== q.ans ? '❌' : ''))
+            : '';
+
+          return `<div class="option ${cls}" id="opt${i}"
+                       onclick="${!done ? `selectOption(${i})` : ''}">
+            <div class="option-letter">${LETTERS[i]}</div>
+            <div class="option-text">${opt}</div>
+            <div class="option-icon" style="opacity:${icon?'1':'0'}">${icon}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="explanation ${done ? 'show' : ''}" id="expl">
+        💡 ${q.exp}
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="goTo(${idx-1})" ${idx===0?'disabled':''}>← Préc.</button>
+        <button class="btn btn-ghost" onclick="skipQuestion()" ${done?'disabled':''}>Ignorer ⏭</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="btn-validate" onclick="validate()"
+          ${(ans===null||done)?'disabled':''}>Valider ✓</button>
+        ${idx < 29
+          ? `<button class="btn btn-ghost" onclick="goTo(${idx+1})">Suiv. →</button>`
+          : `<button class="btn btn-primary" onclick="showResults()">Terminer 🏁</button>`}
+      </div>
+    </div>`;
+
+  updateHeader();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectOption(i) {
+  if (state.answered[state.current]) return;
+  state.answers[state.current] = i;
+  document.querySelectorAll('.option').forEach((el, j) => {
+    el.classList.toggle('selected', j === i);
+  });
+  const btn = $('btn-validate');
+  if (btn) { btn.disabled = false; btn.classList.add('pop'); }
+}
+
+function validate() {
+  const idx = state.current;
+  if (state.answers[idx] === null || state.answered[idx]) return;
+  state.answered[idx] = true;
+
+  const q   = QUESTIONS[idx];
+  const ans = state.answers[idx];
+
+  document.querySelectorAll('.option').forEach((el, i) => {
+    el.classList.add('disabled');
+    el.onclick = null;
+    if (i === q.ans) {
+      el.classList.add('correct');
+      el.querySelector('.option-icon').textContent = '✅';
+      el.querySelector('.option-icon').style.opacity = '1';
+    } else if (i === ans && ans !== q.ans) {
+      el.classList.add('wrong');
+      el.querySelector('.option-icon').textContent = '❌';
+      el.querySelector('.option-icon').style.opacity = '1';
+    }
+  });
+
+  $('expl').classList.add('show');
+  const btn = $('btn-validate');
+  if (btn) btn.disabled = true;
+  updateHeader();
+}
+
+function skipQuestion() {
+  if (state.answered[state.current]) return;
+  state.answers[state.current]  = -1;
+  state.answered[state.current] = true;
+  renderQuestion(state.current);
+}
+
+function goTo(idx) {
+  if (idx < 0 || idx > 29) return;
+  state.current = idx;
+  renderQuestion(idx);
+}
+
+function updateHeader() {
+  const done    = state.answered.filter(Boolean).length;
+  const correct = state.answers.reduce((a, v, i) =>
+    a + (state.answered[i] && v === QUESTIONS[i].ans ? 1 : 0), 0);
+  $('live-score').textContent = `${correct} / ${done}`;
+  $('prog-fill').style.width  = Math.round(done/30*100) + '%';
+  $('prog-txt').textContent   = `${done} / 30`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RÉSULTATS
+// ═══════════════════════════════════════════════════════════════
+function showResults() {
+  $('quiz-screen').style.display    = 'none';
+  $('results-screen').style.display = 'block';
+
+  const correct = state.answers.reduce((a,v,i) =>
+    a + (state.answered[i] && v === QUESTIONS[i].ans ? 1 : 0), 0);
+  const wrong   = state.answers.reduce((a,v,i) =>
+    a + (state.answered[i] && v !== null && v !== -1 && v !== QUESTIONS[i].ans ? 1 : 0), 0);
+  const skipped = state.answers.filter(v => v === null || v === -1).length;
+  const pct     = Math.round(correct / 30 * 100);
+
+  const offset = 326.7 - (pct / 100) * 326.7;
+  setTimeout(() => {
+    $('ring-arc').style.transition = 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)';
+    $('ring-arc').style.strokeDashoffset = offset;
+  }, 100);
+
+  $('res-pct').textContent  = pct + '%';
+  $('res-ok').textContent   = correct;
+  $('res-err').textContent  = wrong;
+  $('res-skip').textContent = skipped;
+
+  let title, msg;
+  if      (pct >= 90) { title = '🏆 Expert !';        msg = `Vous maîtrisez parfaitement l'entretien d'un PC Windows. Score exceptionnel : ${correct}/30 !`; }
+  else if (pct >= 70) { title = '🎉 Très bien !';     msg = 'Vous avez de solides connaissances en maintenance Windows. Quelques points à consolider.'; }
+  else if (pct >= 50) { title = '👍 Pas mal !';       msg = 'Vous avez les bases. Pratiquez ces nettoyages régulièrement pour ancrer vos connaissances.'; }
+  else if (pct >= 30) { title = '📚 À retravailler'; msg = 'L\'entretien d\'un PC est un sujet vaste. Relisez les explications et retentez le QCM !'; }
+  else                { title = '💪 Débutant';        msg = 'C\'est un bon début ! Explorez ces outils Windows et les notions de maintenance de base.'; }
+
+  $('res-title').textContent = title;
+  $('res-msg').textContent   = msg;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showReview() {
+  const area = $('review-area');
+  area.style.display = area.style.display === 'none' ? 'block' : 'none';
+  if (area.style.display === 'block') { renderReview('all'); area.scrollIntoView({behavior:'smooth',block:'start'}); }
+}
+
+function filterReview(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReview(filter);
+}
+
+function renderReview(filter) {
+  let html = '';
+  QUESTIONS.forEach((q, i) => {
+    const a     = state.answers[i];
+    const done  = state.answered[i];
+    const isOk    = done && a === q.ans;
+    const isWrong = done && a !== null && a !== -1 && a !== q.ans;
+    const isSkip  = !done || a === null || a === -1;
+
+    if (filter === 'ok'    && !isOk)    return;
+    if (filter === 'wrong' && !isWrong) return;
+    if (filter === 'skip'  && !isSkip)  return;
+
+    const icon = isOk ? '✅' : isWrong ? '❌' : '⏭';
+    const yourAns = a !== null && a !== -1 ? q.opts[a] : '—';
+
+    html += `<div class="review-item" onclick="jumpToQ(${i})">
+      <div class="review-icon">${icon}</div>
+      <div class="review-body">
+        <div class="review-q">Q${i+1}. ${q.q}</div>
+        <div class="review-ans">
+          ${isWrong ? `<span class="wrong-ans">Votre réponse : ${yourAns}</span> &nbsp;·&nbsp; ` : ''}
+          <span class="correct-ans">✓ ${q.opts[q.ans]}</span>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  $('review-list').innerHTML = html ||
+    '<div style="text-align:center;color:var(--text2);padding:24px;font-size:.85rem">Aucune question dans cette catégorie.</div>';
+}
+
+function jumpToQ(idx) {
+  $('results-screen').style.display = 'none';
+  $('quiz-screen').style.display    = 'block';
+  state.current = idx;
+  renderQuestion(idx);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restartQuiz() {
+  $('results-screen').style.display = 'none';
+  $('ring-arc').style.transition    = 'none';
+  $('ring-arc').style.strokeDashoffset = '326.7';
+  $('review-area').style.display    = 'none';
+  startQuiz();
+}
+</script>
+</body>
+</html>
