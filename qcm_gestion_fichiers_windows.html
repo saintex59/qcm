@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QCM — Gestion des fichiers Windows</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --dark:   #1C1612;
+    --brown:  #3D2B1F;
+    --terra:  #B85042;
+    --rust:   #8B3A2F;
+    --sand:   #E7E8D1;
+    --cream:  #F5F2EC;
+    --sage:   #A7BEAE;
+    --gold:   #D4A843;
+    --white:  #FFFFFF;
+    --gray:   #7A6B5E;
+    --lgray:  #B8AFA8;
+    --green:  #4A7C59;
+    --orange: #D4782A;
+    --red:    #B83030;
+    --text:   #2C1F17;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── Texture background ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 30%, rgba(184,80,66,0.05) 0%, transparent 60%),
+                      radial-gradient(circle at 80% 70%, rgba(212,168,67,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: relative;
+    z-index: 10;
+    background: var(--brown);
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .header-accent {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 8px;
+    background: var(--terra);
+  }
+
+  .header-inner {
+    padding: 40px 48px 36px 56px;
+    display: flex;
+    align-items: flex-end;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .folder-icon {
+    width: 64px;
+    height: 56px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .folder-body {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 64px; height: 44px;
+    background: var(--gold);
+    border-radius: 2px 6px 6px 6px;
+  }
+  .folder-tab {
+    position: absolute;
+    top: 6px; left: 0;
+    width: 26px; height: 10px;
+    background: var(--orange);
+    border-radius: 2px 6px 0 0;
+  }
+
+  .header-text { flex: 1; min-width: 240px; }
+
+  .header-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(26px, 4vw, 44px);
+    font-weight: 800;
+    color: var(--sand);
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .header-sub {
+    color: var(--lgray);
+    font-size: 14px;
+    font-weight: 300;
+  }
+
+  .header-chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  .chip {
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--lgray);
+    background: rgba(255,255,255,0.04);
+  }
+  .chip.highlight {
+    background: rgba(184,80,66,0.2);
+    border-color: var(--terra);
+    color: var(--sand);
+  }
+
+  /* ─── PROGRESS ─── */
+  .progress-section {
+    position: relative;
+    z-index: 10;
+    background: var(--dark);
+    padding: 16px 48px;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--terra), var(--gold));
+    border-radius: 100px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .progress-info {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .score-info {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--lgray);
+    white-space: nowrap;
+  }
+
+  /* ─── DOTS ─── */
+  .dots-section {
+    position: relative;
+    z-index: 10;
+    background: var(--dark);
+    padding: 0 48px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .dots-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+    cursor: default;
+  }
+  .dot.current { background: var(--gold); box-shadow: 0 0 6px var(--gold); width: 18px; border-radius: 4px; }
+  .dot.correct { background: var(--green); }
+  .dot.wrong   { background: var(--terra); }
+  .dot.skipped { background: var(--gray); }
+
+  /* ─── MAIN ─── */
+  main {
+    position: relative;
+    z-index: 10;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+
+  /* ─── START SCREEN ─── */
+  #start-screen {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 640px) {
+    #start-screen { grid-template-columns: 1fr; }
+  }
+
+  .start-main {
+    background: var(--white);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  }
+
+  .start-icon-wrap { margin-bottom: 24px; }
+
+  .start-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--brown);
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  .start-desc {
+    color: var(--gray);
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    text-align: center;
+    padding: 16px 8px;
+    background: var(--cream);
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .stat-val { font-size: 28px; font-weight: 700; color: var(--terra); margin-bottom: 4px; font-family: 'Playfair Display', serif; }
+  .stat-lbl { font-size: 11px; color: var(--gray); font-family: 'DM Mono', monospace; letter-spacing: 0.5px; }
+
+  .btn-start {
+    width: 100%;
+    padding: 16px;
+    background: var(--terra);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+  }
+  .btn-start:hover { background: var(--rust); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(184,80,66,0.35); }
+
+  .start-topics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .topic-item {
+    background: var(--white);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  .topic-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .topic-name { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
+  .topic-count { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--lgray); }
+
+  /* ─── QUIZ SCREEN ─── */
+  #quiz-screen { display: none; }
+
+  .question-card {
+    background: var(--white);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.08);
+    animation: cardIn 0.35s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .question-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--terra), var(--gold));
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .q-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(184,80,66,0.1);
+    color: var(--terra);
+    border: 1px solid rgba(184,80,66,0.2);
+    letter-spacing: 0.5px;
+  }
+
+  .q-cat {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--lgray);
+    letter-spacing: 0.5px;
+  }
+
+  .q-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(17px, 2.5vw, 22px);
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--brown);
+    margin-bottom: 28px;
+  }
+
+  /* ─── OPTIONS ─── */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .opt-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--cream);
+    border: 1.5px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .opt-btn:hover:not(:disabled) {
+    border-color: var(--terra);
+    background: rgba(184,80,66,0.04);
+    transform: translateX(4px);
+  }
+
+  .opt-letter {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--terra);
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .opt-text { flex: 1; }
+
+  .opt-btn.selected {
+    border-color: var(--terra);
+    background: rgba(184,80,66,0.06);
+  }
+  .opt-btn.selected .opt-letter { background: var(--terra); color: var(--white); }
+
+  .opt-btn.correct-ans {
+    border-color: var(--green);
+    background: rgba(74,124,89,0.08);
+    animation: correctFlash 0.4s ease;
+  }
+  .opt-btn.correct-ans .opt-letter { background: var(--green); color: var(--white); }
+
+  .opt-btn.wrong-ans {
+    border-color: var(--red);
+    background: rgba(184,48,48,0.07);
+    animation: wrongShake 0.4s ease;
+  }
+  .opt-btn.wrong-ans .opt-letter { background: var(--red); color: var(--white); }
+
+  .opt-btn.reveal {
+    border-color: rgba(74,124,89,0.4);
+    background: rgba(74,124,89,0.05);
+  }
+  .opt-btn.reveal .opt-letter { background: rgba(74,124,89,0.2); color: var(--green); }
+
+  .opt-btn:disabled { cursor: default; transform: none; }
+
+  @keyframes correctFlash {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.018); }
+    100% { transform: scale(1); }
+  }
+  @keyframes wrongShake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-7px); }
+    40% { transform: translateX(7px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* ─── FEEDBACK ─── */
+  .feedback-box {
+    display: none;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.3s ease;
+  }
+  .feedback-box.show { display: flex; }
+  .fb-correct { background: rgba(74,124,89,0.1); border: 1px solid rgba(74,124,89,0.25); }
+  .fb-wrong   { background: rgba(184,80,66,0.08); border: 1px solid rgba(184,80,66,0.2); }
+
+  .fb-icon { font-size: 22px; flex-shrink: 0; }
+  .fb-content strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .fb-content p { font-size: 13px; line-height: 1.55; color: var(--gray); }
+  .fb-correct .fb-content strong { color: var(--green); }
+  .fb-wrong   .fb-content strong { color: var(--terra); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── CARD FOOTER ─── */
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn {
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+  }
+
+  .btn-primary {
+    background: var(--terra);
+    color: var(--white);
+    box-shadow: 0 4px 16px rgba(184,80,66,0.3);
+  }
+  .btn-primary:hover { background: var(--rust); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--lgray);
+    border: 1.5px solid rgba(0,0,0,0.1);
+  }
+  .btn-ghost:hover { border-color: var(--terra); color: var(--terra); }
+
+  .tip-text {
+    font-size: 12px;
+    color: var(--lgray);
+    font-style: italic;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* ─── RESULTS ─── */
+  #results-screen { display: none; animation: cardIn 0.5s ease; }
+
+  .results-hero {
+    background: var(--brown);
+    border-radius: 20px;
+    padding: 48px 40px;
+    text-align: center;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .results-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(212,168,67,0.1) 0%, transparent 60%);
+  }
+
+  .trophy-wrap { font-size: 64px; margin-bottom: 16px; animation: trophyBounce 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.2s both; display: block; position: relative; z-index: 1; }
+
+  @keyframes trophyBounce {
+    from { transform: scale(0) rotate(-15deg); opacity: 0; }
+    to   { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .score-big {
+    font-family: 'Playfair Display', serif;
+    font-size: 72px;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+    position: relative; z-index: 1;
+  }
+
+  .score-pct {
+    font-size: 18px;
+    color: var(--lgray);
+    margin: 6px 0 20px;
+    position: relative; z-index: 1;
+  }
+
+  .grade-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 800;
+    position: relative; z-index: 1;
+    margin-bottom: 8px;
+  }
+
+  .grade-msg {
+    color: var(--lgray);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative; z-index: 1;
+  }
+
+  .results-stats {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .res-stat {
+    background: var(--white);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  }
+  .res-stat .val { font-family: 'Playfair Display', serif; font-size: 40px; font-weight: 800; margin-bottom: 6px; }
+  .res-stat .lbl { font-size: 12px; color: var(--gray); font-family: 'DM Mono', monospace; }
+
+  .results-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 36px;
+  }
+
+  .btn-lg {
+    padding: 14px 32px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  /* ─── REVIEW ─── */
+  .review-wrap {
+    background: var(--white);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  }
+
+  .review-header {
+    background: var(--brown);
+    padding: 16px 24px;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--sand);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .review-item {
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .review-item:last-child { border-bottom: none; }
+  .review-item.r-ok   { background: rgba(74,124,89,0.03); }
+  .review-item.r-ko   { background: rgba(184,80,66,0.03); }
+
+  .r-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .r-q    { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .r-a    { font-size: 12px; font-family: 'DM Mono', monospace; }
+  .r-ok .r-a { color: var(--green); }
+  .r-ko .r-a { color: var(--terra); }
+
+  @media (max-width: 540px) {
+    .results-stats { grid-template-columns: 1fr 1fr; }
+    header .header-inner { padding: 28px 24px 24px 32px; }
+    .progress-section, .dots-section { padding-left: 24px; padding-right: 24px; }
+    main { padding: 24px 16px 48px; }
+    .question-card { padding: 28px 20px; }
+    .results-hero { padding: 36px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-accent"></div>
+  <div class="header-inner">
+    <div class="folder-icon">
+      <div class="folder-tab"></div>
+      <div class="folder-body"></div>
+    </div>
+    <div class="header-text">
+      <div class="header-eyebrow">Quiz interactif</div>
+      <h1>Gérer ses fichiers Windows</h1>
+      <p class="header-sub">Testez toutes vos connaissances sur la gestion des fichiers</p>
+    </div>
+    <div class="header-chips">
+      <span class="chip highlight">30 questions</span>
+      <span class="chip">8 thèmes</span>
+      <span class="chip">4 choix</span>
+    </div>
+  </div>
+</header>
+
+<div class="progress-section" id="progress-section" style="display:none;">
+  <div class="progress-row">
+    <span class="progress-info" id="prog-label">1 / 30</span>
+    <div class="progress-track"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <span class="score-info" id="score-label">Score : 0</span>
+  </div>
+</div>
+
+<div class="dots-section" id="dots-section" style="display:none;">
+  <div class="dots-wrap" id="dots-wrap"></div>
+</div>
+
+<main>
+
+  <!-- ══ START SCREEN ══ -->
+  <div id="start-screen">
+    <div class="start-main">
+      <div class="start-icon-wrap">
+        <span style="font-size:52px;">🗂️</span>
+      </div>
+      <h2 class="start-title">Prêt à tester vos<br>connaissances ?</h2>
+      <p class="start-desc">Ce QCM couvre tous les thèmes de la présentation : Explorateur, arborescence, nommage, copier/déplacer, recherche, Corbeille, ZIP et bonnes pratiques.</p>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-val">30</div><div class="stat-lbl">QUESTIONS</div></div>
+        <div class="stat-card"><div class="stat-val">8</div><div class="stat-lbl">THÈMES</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-lbl">CHOIX/Q.</div></div>
+      </div>
+      <button class="btn-start" onclick="startQuiz()">Commencer le QCM →</button>
+    </div>
+
+    <div class="start-topics">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--lgray);margin-bottom:4px;padding-left:4px;">THÈMES DU QCM</div>
+      <div class="topic-item"><div class="topic-dot" style="background:#B85042"></div><div class="topic-name">L'Explorateur de fichiers</div><div class="topic-count">4 q.</div></div>
+      <div class="topic-item"><div class="topic-dot" style="background:#D4782A"></div><div class="topic-name">Arborescence Windows</div><div class="topic-count">4 q.</div></div>
+      <div class="topic-item"><div class="topic-dot" style="background:#D4A843"></div><div class="topic-name">Créer & nommer ses fichiers</div><div class="topic-count">4 q.</div></div>
+      <div class="topic-item"><div class="topic-dot" style="background:#A7BEAE"></div><div class="topic-name">Copier, déplacer, supprimer</div><div class="topic-count">4 q.</div></div>
+      <div class="topic-item"><div class="topic-dot" style="background:#4A7C59"></div><div class="topic-name">Rechercher un fichier</div><div class="topic-count">4 q.</div></div>
+      <div class="topic-item"><div class="topic-dot" style="background:#8B3A2F"></div><div class="topic-name">La Corbeille</div><div class="topic-count">4 q.</div></div>
+      <div class="topic-item"><div class="topic-dot" style="background:#7A6B5E"></div><div class="topic-name">Compression & archives ZIP</div><div class="topic-count">4 q.</div></div>
+      <div class="topic-item"><div class="topic-dot" style="background:#3D2B1F"></div><div class="topic-name">Bonnes pratiques</div><div class="topic-count">6 q.</div></div>
+    </div>
+  </div>
+
+  <!-- ══ QUIZ SCREEN ══ -->
+  <div id="quiz-screen">
+    <div class="question-card" id="q-card">
+      <div class="q-header">
+        <span class="q-badge" id="q-num">Q.01</span>
+        <span class="q-cat" id="q-cat">EXPLORATEUR</span>
+      </div>
+      <div class="q-text" id="q-text"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback-box" id="feedback">
+        <span class="fb-icon" id="fb-icon"></span>
+        <div class="fb-content">
+          <strong id="fb-title"></strong>
+          <p id="fb-body"></p>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-ghost" id="skip-btn" onclick="skipQ()">Passer</button>
+        <span class="tip-text" id="tip-text">Sélectionnez une réponse</span>
+        <button class="btn btn-primary" id="next-btn" onclick="nextQ()" disabled>Suivant →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RESULTS SCREEN ══ -->
+  <div id="results-screen">
+    <div class="results-hero">
+      <span class="trophy-wrap" id="trophy">🏆</span>
+      <div class="score-big" id="r-score">0/30</div>
+      <div class="score-pct" id="r-pct">0% de réussite</div>
+      <div class="grade-text" id="r-grade"></div>
+      <p class="grade-msg" id="r-msg"></p>
+    </div>
+
+    <div class="results-stats">
+      <div class="res-stat">
+        <div class="val" style="color:var(--green)" id="s-ok">0</div>
+        <div class="lbl">CORRECTES ✅</div>
+      </div>
+      <div class="res-stat">
+        <div class="val" style="color:var(--terra)" id="s-ko">0</div>
+        <div class="lbl">INCORRECTES ❌</div>
+      </div>
+      <div class="res-stat">
+        <div class="val" style="color:var(--orange)" id="s-sk">0</div>
+        <div class="lbl">PASSÉES ⏭️</div>
+      </div>
+    </div>
+
+    <div class="results-actions">
+      <button class="btn btn-primary btn-lg" onclick="restart()">🔄 Recommencer</button>
+    </div>
+
+    <div class="review-wrap">
+      <div class="review-header">📋 Révision complète des réponses</div>
+      <div id="review-list"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const Q = [
+  // ── EXPLORATEUR (4) ──────────────────────────────────────────
+  {
+    cat: "EXPLORATEUR",
+    q: "Quel raccourci clavier ouvre instantanément l'Explorateur de fichiers Windows ?",
+    opts: ["Ctrl + E", "Win + E", "Alt + E", "Win + F"],
+    ans: 1,
+    exp: "Win + E est le raccourci universel pour ouvrir l'Explorateur de fichiers directement depuis n'importe quel contexte."
+  },
+  {
+    cat: "EXPLORATEUR",
+    q: "Quelle zone de l'Explorateur de fichiers affiche le chemin du dossier actuel ?",
+    opts: ["Le ruban (Ribbon)", "Le volet de navigation", "La barre d'adresse", "La barre de statut"],
+    ans: 2,
+    exp: "La barre d'adresse (en haut de la fenêtre) affiche le chemin complet du dossier actif. On peut cliquer dessus pour taper un chemin directement."
+  },
+  {
+    cat: "EXPLORATEUR",
+    q: "Dans l'Explorateur de fichiers, le volet de navigation sert à :",
+    opts: ["Afficher un aperçu du fichier sélectionné", "Accéder rapidement aux emplacements fréquents et à l'arborescence", "Trier les fichiers par nom, taille ou date", "Créer de nouveaux fichiers ou dossiers"],
+    ans: 1,
+    exp: "Le volet de navigation (colonne gauche) permet d'accéder rapidement aux emplacements favoris, OneDrive, Ce PC et aux dossiers courants."
+  },
+  {
+    cat: "EXPLORATEUR",
+    q: "Le « ruban » (Ribbon) de l'Explorateur de fichiers contient :",
+    opts: ["L'arborescence complète des dossiers", "Des onglets avec des actions contextuelles : Accueil, Partage, Affichage", "La liste des fichiers récemment ouverts", "Les paramètres système de Windows"],
+    ans: 1,
+    exp: "Le ruban organise les actions en onglets contextuels (Accueil, Partage, Affichage) et change selon le type d'élément sélectionné."
+  },
+  // ── ARBORESCENCE (4) ─────────────────────────────────────────
+  {
+    cat: "ARBORESCENCE",
+    q: "Quel lecteur est normalement réservé au système d'exploitation Windows ?",
+    opts: ["Disque D:", "Disque C:", "Disque E:", "Disque A:"],
+    ans: 1,
+    exp: "Le disque C: (C:\\) est la partition système de Windows par défaut. Il contient les fichiers système, les programmes installés et les dossiers utilisateurs."
+  },
+  {
+    cat: "ARBORESCENCE",
+    q: "Quel est le chemin complet typique du dossier Documents d'un utilisateur nommé « Alice » ?",
+    opts: ["C:\\Documents\\Alice", "C:\\Users\\Alice\\Documents", "C:\\Alice\\Mes Documents", "D:\\Users\\Documents\\Alice"],
+    ans: 1,
+    exp: "Sous Windows 10/11, les dossiers personnels se trouvent dans C:\\Users\\[NomUtilisateur]\\. Ainsi Documents = C:\\Users\\Alice\\Documents."
+  },
+  {
+    cat: "ARBORESCENCE",
+    q: "Quel dossier est le plus adapté pour stocker vos fichiers personnels de travail ?",
+    opts: ["C:\\ (racine du disque)", "C:\\Windows\\System32", "C:\\Users\\[Votre nom]\\Documents", "C:\\Program Files"],
+    ans: 2,
+    exp: "Le dossier Documents (C:\\Users\\[nom]\\Documents) est prévu pour vos fichiers personnels. La racine C:\\ est réservée au système et C:\\Program Files aux logiciels."
+  },
+  {
+    cat: "ARBORESCENCE",
+    q: "Que contient principalement le dossier « Téléchargements » (Downloads) ?",
+    opts: ["Les mises à jour Windows automatiques", "Les fichiers téléchargés depuis le navigateur par défaut", "Les fichiers système temporaires de Windows", "Les applications installées sur le PC"],
+    ans: 1,
+    exp: "Le dossier Téléchargements est la destination par défaut des fichiers téléchargés via le navigateur. Il doit être vidé régulièrement pour libérer de l'espace."
+  },
+  // ── NOMMAGE (4) ──────────────────────────────────────────────
+  {
+    cat: "NOMMAGE",
+    q: "Lequel de ces noms de fichier est le mieux nommé ?",
+    opts: ["fichier1.docx", "mon truc important.pdf", "Rapport-Annuel-2024.docx", "dfghjk.xlsx"],
+    ans: 2,
+    exp: "Rapport-Annuel-2024.docx est explicite, inclut l'année, utilise des tirets à la place des espaces et a une extension correcte. Les autres noms ne permettent pas d'identifier le contenu."
+  },
+  {
+    cat: "NOMMAGE",
+    q: "Quel caractère est INTERDIT dans les noms de fichiers Windows ?",
+    opts: ["Le tiret  -", "Le souligné  _", "Le deux-points  :", "Les parenthèses  ()"],
+    ans: 2,
+    exp: "Windows interdit ces caractères dans les noms de fichiers : \\ / : * ? \" < > |  — Le deux-points (:) est réservé pour les lecteurs (C:, D:, etc.)."
+  },
+  {
+    cat: "NOMMAGE",
+    q: "Quel raccourci clavier permet de renommer un fichier sélectionné dans l'Explorateur ?",
+    opts: ["Entrée", "F2", "R", "Ctrl + R"],
+    ans: 1,
+    exp: "F2 active le mode renommage du fichier ou dossier sélectionné dans l'Explorateur. On peut aussi faire un double clic lent sur le nom."
+  },
+  {
+    cat: "NOMMAGE",
+    q: "L'extension « .xlsx » correspond à quel type de fichier ?",
+    opts: ["Un document texte Word", "Un fichier de présentation PowerPoint", "Un tableur Excel", "Un fichier audio"],
+    ans: 2,
+    exp: ".xlsx est l'extension des fichiers Microsoft Excel (tableur). .docx = Word, .pptx = PowerPoint, .mp3/.wav = audio."
+  },
+  // ── COPIER/DÉPLACER (4) ──────────────────────────────────────
+  {
+    cat: "COPIER/DÉPLACER",
+    q: "Quelle combinaison de touches permet de déplacer (couper) un fichier ?",
+    opts: ["Ctrl + C", "Ctrl + D", "Ctrl + X", "Ctrl + M"],
+    ans: 2,
+    exp: "Ctrl + X coupe l'élément (le retire de l'emplacement source) prêt à être collé ailleurs avec Ctrl + V. C'est l'équivalent du déplacement par raccourci clavier."
+  },
+  {
+    cat: "COPIER/DÉPLACER",
+    q: "Quelle est la différence entre « Copier » et « Déplacer » un fichier ?",
+    opts: ["Il n'y a aucune différence", "Copier crée un double (l'original reste), Déplacer transfère (l'original disparaît de la source)", "Copier supprime l'original, Déplacer conserve l'original", "Copier fonctionne entre lecteurs, Déplacer uniquement dans le même lecteur"],
+    ans: 1,
+    exp: "Copier (Ctrl+C) duplique le fichier — l'original reste. Déplacer (Ctrl+X) transfère le fichier — l'original est supprimé de la source après collage."
+  },
+  {
+    cat: "COPIER/DÉPLACER",
+    q: "Comment sélectionner plusieurs fichiers non-consécutifs dans l'Explorateur ?",
+    opts: ["Shift + clic sur chaque fichier", "Ctrl + clic sur chaque fichier", "Alt + clic sur chaque fichier", "Double-clic sur chaque fichier"],
+    ans: 1,
+    exp: "Ctrl + clic permet de sélectionner plusieurs fichiers individuels non-consécutifs. Shift + clic sélectionne une plage continue de fichiers."
+  },
+  {
+    cat: "COPIER/DÉPLACER",
+    q: "Quel raccourci permet d'annuler la dernière action dans l'Explorateur (ex : suppression accidentelle) ?",
+    opts: ["Ctrl + Z", "Ctrl + Y", "Ctrl + A", "Alt + F4"],
+    ans: 0,
+    exp: "Ctrl + Z annule la dernière action dans l'Explorateur, y compris les suppressions, renommages ou déplacements. Très utile pour les erreurs de manipulation."
+  },
+  // ── RECHERCHE (4) ────────────────────────────────────────────
+  {
+    cat: "RECHERCHE",
+    q: "Quelle touche active la barre de recherche directement dans l'Explorateur de fichiers ?",
+    opts: ["F1", "F3", "F5", "F12"],
+    ans: 1,
+    exp: "F3 active immédiatement la barre de recherche de l'Explorateur de fichiers, prête à la saisie. Ctrl+F fonctionne également."
+  },
+  {
+    cat: "RECHERCHE",
+    q: "Quel opérateur de recherche Windows permet de trouver tous les fichiers PDF ?",
+    opts: ["type:pdf", "*.pdf", "ext=pdf", "find:pdf"],
+    ans: 1,
+    exp: "Le wildcard *.pdf recherche tous les fichiers dont le nom se termine par .pdf. L'étoile (*) remplace n'importe quelle suite de caractères."
+  },
+  {
+    cat: "RECHERCHE",
+    q: "Pour rechercher dans tout le PC (et pas seulement un dossier), où faut-il se placer dans l'Explorateur ?",
+    opts: ["Dans le dossier Documents", "Dans Ce PC", "Dans le Bureau", "Dans Accès rapide"],
+    ans: 1,
+    exp: "En lançant la recherche depuis « Ce PC », Windows parcourt tous les lecteurs. Si on est dans un sous-dossier, la recherche est limitée à ce dossier et ses sous-dossiers."
+  },
+  {
+    cat: "RECHERCHE",
+    q: "Que permet le raccourci Win + S sous Windows ?",
+    opts: ["Ouvrir les Paramètres Windows", "Faire une capture d'écran", "Ouvrir la barre de recherche Windows (Start)", "Synchroniser les fichiers OneDrive"],
+    ans: 2,
+    exp: "Win + S ouvre la barre de recherche Windows qui permet de chercher des fichiers, applications et paramètres dans tout le système."
+  },
+  // ── CORBEILLE (4) ────────────────────────────────────────────
+  {
+    cat: "CORBEILLE",
+    q: "Que se passe-t-il quand on appuie sur la touche Suppr sur un fichier sélectionné ?",
+    opts: ["Le fichier est supprimé définitivement sans récupération possible", "Le fichier est envoyé dans la Corbeille (suppression réversible)", "Une boîte de dialogue demande une confirmation de suppression définitive", "Le fichier est masqué mais reste accessible"],
+    ans: 1,
+    exp: "La touche Suppr envoie le fichier dans la Corbeille, d'où il peut être restauré. Pour une suppression définitive immédiate, il faut utiliser Shift + Suppr."
+  },
+  {
+    cat: "CORBEILLE",
+    q: "Comment restaurer un fichier supprimé depuis la Corbeille ?",
+    opts: ["Double-cliquer sur le fichier dans la Corbeille", "Clic droit sur le fichier dans la Corbeille → Restaurer", "Glisser le fichier hors de la Corbeille vers le Bureau", "Appuyer sur Ctrl + Z depuis la Corbeille"],
+    ans: 1,
+    exp: "Clic droit sur un fichier dans la Corbeille → « Restaurer » remet le fichier à son emplacement d'origine. On peut aussi sélectionner plusieurs fichiers et restaurer en masse."
+  },
+  {
+    cat: "CORBEILLE",
+    q: "Quelle combinaison supprime un fichier DÉFINITIVEMENT sans passer par la Corbeille ?",
+    opts: ["Ctrl + Suppr", "Shift + Suppr", "Alt + Suppr", "Win + Suppr"],
+    ans: 1,
+    exp: "Shift + Suppr supprime immédiatement et définitivement le fichier sans le placer dans la Corbeille. Cette action est irréversible — à utiliser avec précaution."
+  },
+  {
+    cat: "CORBEILLE",
+    q: "Où se trouve l'option pour modifier la taille maximale allouée à la Corbeille ?",
+    opts: ["Paramètres → Stockage", "Clic droit sur l'icône Corbeille → Propriétés", "Panneau de configuration → Système", "Gestionnaire des tâches → Performances"],
+    ans: 1,
+    exp: "Clic droit sur l'icône Corbeille du Bureau → Propriétés permet de définir la taille maximale de la Corbeille pour chaque lecteur, ou de désactiver complètement la mise en Corbeille."
+  },
+  // ── ZIP (4) ──────────────────────────────────────────────────
+  {
+    cat: "COMPRESSION ZIP",
+    q: "Comment créer une archive ZIP depuis l'Explorateur Windows sans logiciel tiers ?",
+    opts: ["Clic droit → Compresser dans un fichier ZIP", "Clic droit → Envoyer vers → Dossier compressé", "Les deux réponses précédentes sont correctes selon la version Windows", "Il est impossible de créer un ZIP sans logiciel tiers"],
+    ans: 2,
+    exp: "Windows intègre nativement la compression ZIP. Selon la version, le menu peut afficher « Compresser dans un fichier ZIP » (Windows 11) ou « Envoyer vers → Dossier compressé » (Windows 10)."
+  },
+  {
+    cat: "COMPRESSION ZIP",
+    q: "Pour extraire le contenu d'une archive ZIP dans un dossier spécifique, que faut-il faire ?",
+    opts: ["Double-cliquer sur le ZIP et glisser les fichiers", "Clic droit sur le ZIP → Extraire tout… → Choisir la destination", "Renommer le fichier .zip en .dossier", "Ouvrir le ZIP puis appuyer sur Ctrl + A + C"],
+    ans: 1,
+    exp: "Clic droit → « Extraire tout… » ouvre un assistant permettant de choisir précisément le dossier de destination pour les fichiers extraits."
+  },
+  {
+    cat: "COMPRESSION ZIP",
+    q: "Quel avantage principal offre la compression d'un fichier en ZIP ?",
+    opts: ["Le fichier est chiffré et sécurisé automatiquement", "La taille du fichier est réduite et plusieurs fichiers sont regroupés en un seul", "Le fichier peut être ouvert sur n'importe quel OS sans installation", "Le fichier est sauvegardé automatiquement dans le cloud"],
+    ans: 1,
+    exp: "La compression ZIP réduit la taille des fichiers (souvent 30-60%) et permet de regrouper plusieurs fichiers/dossiers en une seule archive, pratique pour l'envoi par email ou le partage."
+  },
+  {
+    cat: "COMPRESSION ZIP",
+    q: "Que signifie l'extension « .7z » ?",
+    opts: ["Un fichier ZIP renommé version 7", "Une archive créée avec le logiciel 7-Zip, offrant une meilleure compression que ZIP", "Un fichier vidéo compressé version 7", "Un format propriétaire Microsoft"],
+    ans: 1,
+    exp: ".7z est le format d'archive du logiciel libre 7-Zip. Il offre généralement un meilleur taux de compression que le ZIP standard, mais nécessite 7-Zip pour être ouvert."
+  },
+  // ── BONNES PRATIQUES (6) ────────────────────────────────────
+  {
+    cat: "BONNES PRATIQUES",
+    q: "Quelle est la règle de sauvegarde « 3-2-1 » ?",
+    opts: ["3 sauvegardes quotidiennes, 2 hebdomadaires, 1 mensuelle", "3 copies des données, sur 2 supports différents, dont 1 hors site (cloud/disque externe)", "Sauvegarder toutes les 3 heures, sur 2 PC, 1 fois par jour minimum", "3 Go par sauvegarde, 2 fois par semaine, 1 an de conservation"],
+    ans: 1,
+    exp: "La règle 3-2-1 est une bonne pratique universelle : 3 copies de vos données, sur 2 supports différents (ex : PC + disque externe), dont 1 copie hors site (cloud ou chez un tiers)."
+  },
+  {
+    cat: "BONNES PRATIQUES",
+    q: "Quelle est la profondeur d'arborescence recommandée pour ne pas se perdre dans ses dossiers ?",
+    opts: ["1 niveau maximum", "Pas plus de 3 niveaux", "Entre 5 et 7 niveaux pour une organisation fine", "Il n'y a pas de limite recommandée"],
+    ans: 1,
+    exp: "Une arborescence de 3 niveaux maximum (ex : Documents → Travail → Projets) est idéale. Au-delà, la navigation devient fastidieuse et la structure difficile à maintenir."
+  },
+  {
+    cat: "BONNES PRATIQUES",
+    q: "Pourquoi ne faut-il PAS stocker ses fichiers originaux directement sur le Bureau Windows ?",
+    opts: ["Le Bureau ne peut pas stocker de fichiers", "Les fichiers sur le Bureau ralentissent Windows et risquent d'être perdus ou confondus avec des raccourcis", "Windows supprime automatiquement les fichiers du Bureau après 30 jours", "Les fichiers du Bureau ne peuvent pas être sauvegardés"],
+    ans: 1,
+    exp: "Le Bureau est un espace de travail visuel, pas un dossier de stockage. Stocker des fichiers sur le Bureau encombre l'interface, ralentit certains systèmes et rend difficile la distinction entre fichiers réels et raccourcis."
+  },
+  {
+    cat: "BONNES PRATIQUES",
+    q: "Quel est le principal inconvénient du dossier « Divers » ou « Autres » ?",
+    opts: ["Windows ne reconnaît pas ce nom de dossier", "Il devient un fourre-tout difficile à parcourir, rendant les fichiers introuvables à terme", "Ce type de dossier est automatiquement supprimé par Windows", "Il ne peut pas contenir de sous-dossiers"],
+    ans: 1,
+    exp: "Un dossier « Divers » devient rapidement un fourre-tout ingérable. Le principe « un dossier = un sujet » permet de retrouver ses fichiers facilement même des mois plus tard."
+  }
+];
+
+// ── State ──
+let cur = 0, score = 0, skipped = 0, answered = 0;
+let history = [];
+let done = new Array(Q.length).fill(false);
+let wasCorrect = new Array(Q.length).fill(false);
+
+function startQuiz() {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  document.getElementById('progress-section').style.display = 'block';
+  document.getElementById('dots-section').style.display = 'block';
+  buildDots();
+  renderQ();
+}
+
+function buildDots() {
+  const wrap = document.getElementById('dots-wrap');
+  wrap.innerHTML = Q.map((_,i) => `<div class="dot" id="d${i}"></div>`).join('');
+}
+
+function updateDot(i, cls) {
+  const d = document.getElementById('d'+i);
+  d.classList.remove('current','correct','wrong','skipped');
+  if (cls) d.classList.add(cls);
+}
+
+function renderQ() {
+  const q = Q[cur];
+  const letters = ['A','B','C','D'];
+
+  // progress
+  document.getElementById('prog-label').textContent = `${cur+1} / ${Q.length}`;
+  document.getElementById('prog-fill').style.width = `${(cur/Q.length)*100}%`;
+  document.getElementById('score-label').textContent = `Score : ${score}`;
+  document.getElementById('q-num').textContent = `Q.${String(cur+1).padStart(2,'0')}`;
+  document.getElementById('q-cat').textContent = q.cat;
+  document.getElementById('q-text').textContent = q.q;
+
+  // update dots
+  for (let i=0;i<Q.length;i++) {
+    if (i===cur) updateDot(i,'current');
+  }
+
+  // options
+  const optsEl = document.getElementById('options');
+  optsEl.innerHTML = q.opts.map((o,i) => `
+    <button class="opt-btn" id="o${i}" onclick="pick(${i})">
+      <span class="opt-letter">${letters[i]}</span>
+      <span class="opt-text">${o}</span>
+    </button>
+  `).join('');
+
+  // reset feedback
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback-box';
+  document.getElementById('tip-text').textContent = 'Sélectionnez une réponse';
+  document.getElementById('next-btn').disabled = true;
+  document.getElementById('skip-btn').disabled = false;
+
+  // re-animate
+  const card = document.getElementById('q-card');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'cardIn 0.35s cubic-bezier(0.4,0,0.2,1)';
+}
+
+function pick(idx) {
+  if (done[cur]) return;
+  done[cur] = true;
+  answered++;
+
+  const q = Q[cur];
+  const correct = idx === q.ans;
+  const letters = ['A','B','C','D'];
+
+  if (correct) {
+    score++;
+    wasCorrect[cur] = true;
+    document.getElementById('o'+idx).classList.add('correct-ans');
+    updateDot(cur,'correct');
+    showFeedback(true, 'Bonne réponse !', q.exp);
+  } else {
+    document.getElementById('o'+idx).classList.add('wrong-ans');
+    document.getElementById('o'+q.ans).classList.add('reveal');
+    updateDot(cur,'wrong');
+    showFeedback(false,
+      `Incorrect — bonne réponse : ${letters[q.ans]}`,
+      q.exp
+    );
+  }
+
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  document.getElementById('skip-btn').disabled = true;
+  document.getElementById('next-btn').disabled = false;
+  document.getElementById('tip-text').textContent = '';
+  document.getElementById('score-label').textContent = `Score : ${score}`;
+
+  history.push({
+    q: q.q,
+    correct,
+    userAns: q.opts[idx],
+    rightAns: q.opts[q.ans]
+  });
+}
+
+function showFeedback(ok, title, body) {
+  const fb = document.getElementById('feedback');
+  document.getElementById('fb-icon').textContent = ok ? '✅' : '❌';
+  document.getElementById('fb-title').textContent = title;
+  document.getElementById('fb-body').textContent = body;
+  fb.className = `feedback-box show ${ok ? 'fb-correct' : 'fb-wrong'}`;
+}
+
+function skipQ() {
+  if (done[cur]) return;
+  done[cur] = true;
+  skipped++;
+
+  const q = Q[cur];
+  document.getElementById('o'+q.ans).classList.add('reveal');
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  document.getElementById('skip-btn').disabled = true;
+  document.getElementById('next-btn').disabled = false;
+  updateDot(cur,'skipped');
+  showFeedback(false, 'Question passée', `La bonne réponse était : ${q.opts[q.ans]}. ${q.exp}`);
+
+  history.push({ q: q.q, correct: false, userAns: '(passée)', rightAns: q.opts[q.ans] });
+}
+
+function nextQ() {
+  if (cur < Q.length - 1) {
+    cur++;
+    renderQ();
+  } else {
+    showResults();
+  }
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('progress-section').style.display = 'none';
+  document.getElementById('dots-section').style.display = 'none';
+
+  const rs = document.getElementById('results-screen');
+  rs.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const pct = Math.round(score / Q.length * 100);
+  const wrong = answered - skipped - score;
+
+  document.getElementById('r-score').textContent = `${score}/${Q.length}`;
+  document.getElementById('r-pct').textContent   = `${pct}% de réussite`;
+  document.getElementById('s-ok').textContent = score;
+  document.getElementById('s-ko').textContent = wrong;
+  document.getElementById('s-sk').textContent = skipped;
+
+  let trophy, grade, msg, gradeColor;
+  if (pct >= 90)      { trophy='🏆'; grade='Excellent !';     gradeColor='var(--gold)';   msg='Maîtrise parfaite de la gestion des fichiers Windows. Vous êtes un expert de l\'organisation !'; }
+  else if (pct >= 75) { trophy='🥇'; grade='Très bien !';     gradeColor='#C8A000';       msg='Très bonne connaissance. Revoyez quelques points sur la recherche ou les bonnes pratiques pour atteindre l\'excellence.'; }
+  else if (pct >= 60) { trophy='🥈'; grade='Bien';            gradeColor='var(--sage)';   msg='Bonne base ! Des lacunes subsistent notamment sur les raccourcis clavier et l\'arborescence.'; }
+  else if (pct >= 40) { trophy='🥉'; grade='Passable';        gradeColor='var(--orange)'; msg='Des bases à consolider. Relisez les sections sur la Corbeille, la compression ZIP et les bonnes pratiques.'; }
+  else                { trophy='📚'; grade='À retravailler';  gradeColor='var(--terra)';  msg='Beaucoup de points à revoir. Parcourez la présentation complète et retentez ce quiz !'; }
+
+  document.getElementById('trophy').textContent = trophy;
+  document.getElementById('r-grade').textContent = grade;
+  document.getElementById('r-grade').style.color = gradeColor;
+  document.getElementById('r-msg').textContent = msg;
+
+  const list = document.getElementById('review-list');
+  list.innerHTML = history.map((h,i) => `
+    <div class="review-item ${h.correct?'r-ok':'r-ko'}">
+      <span class="r-icon">${h.correct?'✅':'❌'}</span>
+      <div>
+        <div class="r-q">${i+1}. ${h.q}</div>
+        <div class="r-a">${h.correct ? 'Bonne réponse ✓' : `Votre réponse : ${h.userAns} → Bonne réponse : ${h.rightAns}`}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function restart() {
+  cur=0; score=0; skipped=0; answered=0;
+  history=[];
+  done=new Array(Q.length).fill(false);
+  wasCorrect=new Array(Q.length).fill(false);
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  document.getElementById('progress-section').style.display = 'block';
+  document.getElementById('dots-section').style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+  buildDots();
+  renderQ();
+}
+</script>
+</body>
+</html>
