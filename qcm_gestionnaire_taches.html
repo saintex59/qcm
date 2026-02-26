@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QCM — Gestionnaire des Tâches Windows</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0D1B2A;
+    --blue: #0078D4;
+    --cyan: #00BCF2;
+    --light: #E8F4FC;
+    --white: #FFFFFF;
+    --gray: #6B7C8D;
+    --lgray: #B0BEC5;
+    --green: #107C10;
+    --orange: #FF8C00;
+    --red: #D13438;
+    --yellow: #FFC300;
+    --card: #122035;
+    --border: rgba(0,188,242,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    font-family: 'Syne', sans-serif;
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,120,212,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,120,212,0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.25;
+  }
+  .orb1 { width: 400px; height: 400px; background: var(--blue); top: -100px; right: -100px; }
+  .orb2 { width: 300px; height: 300px; background: var(--cyan); bottom: 100px; left: -80px; }
+
+  /* ─── HEADER ─── */
+  header {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 48px 24px 36px;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,120,212,0.2);
+    border: 1px solid var(--blue);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--cyan);
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+
+  .win-logo {
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    width: 24px;
+    height: 24px;
+  }
+  .win-logo span {
+    background: var(--cyan);
+    border-radius: 1px;
+  }
+  .win-logo span:nth-child(3),
+  .win-logo span:nth-child(4) { background: var(--blue); }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 0%, var(--cyan) 60%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    color: var(--lgray);
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  /* ─── PROGRESS ─── */
+  .progress-wrap {
+    position: relative;
+    z-index: 10;
+    max-width: 760px;
+    margin: 0 auto 32px;
+    padding: 0 24px;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .progress-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--cyan);
+  }
+
+  .score-display {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--lgray);
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+    border-radius: 100px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 10px rgba(0,188,242,0.5);
+  }
+
+  .dots-nav {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .dot.current { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); width: 20px; border-radius: 4px; }
+  .dot.correct { background: var(--green); }
+  .dot.wrong { background: var(--red); }
+
+  /* ─── CARD ─── */
+  .card-container {
+    position: relative;
+    z-index: 10;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+  }
+
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    position: relative;
+    overflow: hidden;
+    animation: slideIn 0.4s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  }
+
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), transparent);
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .q-number {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--blue);
+    background: rgba(0,120,212,0.15);
+    border: 1px solid rgba(0,120,212,0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+  }
+
+  .q-category {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--lgray);
+    letter-spacing: 0.5px;
+  }
+
+  .q-text {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--white);
+    margin-bottom: 28px;
+  }
+
+  /* ─── OPTIONS ─── */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    color: var(--white);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .option-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--blue);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--blue);
+    transform: translateX(4px);
+  }
+  .option-btn:hover:not(:disabled)::before { opacity: 0.06; }
+
+  .option-letter {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(0,120,212,0.15);
+    border: 1px solid rgba(0,120,212,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--cyan);
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+
+  .option-text { position: relative; z-index: 1; line-height: 1.4; }
+
+  .option-btn.selected {
+    border-color: var(--blue);
+    background: rgba(0,120,212,0.1);
+  }
+  .option-btn.selected .option-letter {
+    background: var(--blue);
+    color: white;
+  }
+
+  .option-btn.correct-answer {
+    border-color: var(--green);
+    background: rgba(16,124,16,0.12);
+    animation: correctPulse 0.4s ease;
+  }
+  .option-btn.correct-answer .option-letter {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+  }
+
+  .option-btn.wrong-answer {
+    border-color: var(--red);
+    background: rgba(209,52,56,0.1);
+    animation: wrongShake 0.4s ease;
+  }
+  .option-btn.wrong-answer .option-letter {
+    background: var(--red);
+    color: white;
+    border-color: var(--red);
+  }
+
+  .option-btn.reveal-correct {
+    border-color: rgba(16,124,16,0.5);
+    background: rgba(16,124,16,0.08);
+  }
+  .option-btn.reveal-correct .option-letter {
+    background: rgba(16,124,16,0.3);
+    color: var(--green);
+    border-color: var(--green);
+  }
+
+  .option-btn:disabled { cursor: default; transform: none; }
+
+  @keyframes correctPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes wrongShake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* ─── FEEDBACK ─── */
+  .feedback {
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .feedback.show { display: flex; gap: 12px; align-items: flex-start; }
+  .feedback.correct-fb { background: rgba(16,124,16,0.12); border: 1px solid rgba(16,124,16,0.3); color: #6BCB6B; }
+  .feedback.wrong-fb { background: rgba(209,52,56,0.1); border: 1px solid rgba(209,52,56,0.3); color: #FF8585; }
+  .feedback-icon { font-size: 20px; flex-shrink: 0; }
+  .feedback-text strong { display: block; margin-bottom: 4px; font-size: 15px; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn-row { display: flex; gap: 12px; justify-content: flex-end; }
+
+  .btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue), #005FA3);
+    color: white;
+    box-shadow: 0 4px 20px rgba(0,120,212,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,120,212,0.5); }
+  .btn-primary:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--lgray);
+    border: 1.5px solid rgba(255,255,255,0.12);
+  }
+  .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* ─── RESULTS ─── */
+  #results-screen {
+    display: none;
+    position: relative;
+    z-index: 10;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+    animation: slideIn 0.5s ease;
+  }
+
+  .results-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px 36px;
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .results-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--yellow), var(--orange), transparent);
+  }
+
+  .trophy { font-size: 64px; margin-bottom: 20px; display: block; animation: bounce 1s ease 0.3s both; }
+
+  @keyframes bounce {
+    0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+    60% { transform: scale(1.15) rotate(3deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .score-big {
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--yellow), var(--orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+
+  .score-label {
+    font-size: 18px;
+    color: var(--lgray);
+    margin-bottom: 32px;
+  }
+
+  .result-grade {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .result-message {
+    color: var(--lgray);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto 36px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+
+  .stat-box {
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+  }
+
+  .stat-val {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .stat-lbl { font-size: 12px; color: var(--lgray); font-family: 'DM Mono', monospace; }
+
+  .review-section { text-align: left; margin-top: 40px; }
+  .review-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--cyan);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .review-item {
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .review-item.r-correct { background: rgba(16,124,16,0.08); border-color: rgba(16,124,16,0.2); }
+  .review-item.r-wrong { background: rgba(209,52,56,0.06); border-color: rgba(209,52,56,0.2); }
+
+  .review-q {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--white);
+  }
+  .review-answer {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--lgray);
+  }
+  .r-correct .review-answer { color: #6BCB6B; }
+  .r-wrong .review-answer { color: #FF8585; }
+
+  /* ─── START SCREEN ─── */
+  #start-screen {
+    position: relative;
+    z-index: 10;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+  }
+
+  .start-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px 40px;
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  }
+
+  .start-icon { font-size: 56px; margin-bottom: 24px; display: block; }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 32px 0;
+  }
+
+  .info-box {
+    padding: 20px 16px;
+    border-radius: 12px;
+    background: rgba(0,120,212,0.08);
+    border: 1px solid rgba(0,120,212,0.2);
+  }
+  .info-box .val { font-size: 28px; font-weight: 800; color: var(--cyan); margin-bottom: 6px; }
+  .info-box .lbl { font-size: 12px; color: var(--lgray); font-family: 'DM Mono', monospace; }
+
+  .topic-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 24px 0;
+  }
+  .tag {
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--lgray);
+  }
+
+  @media (max-width: 540px) {
+    .stats-grid, .info-grid { grid-template-columns: 1fr 1fr; }
+    .question-card, .start-card, .results-card { padding: 24px 20px; }
+    h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
+
+<header>
+  <div class="header-badge">
+    <div class="win-logo"><span></span><span></span><span></span><span></span></div>
+    GESTIONNAIRE DES TÂCHES
+  </div>
+  <h1>QCM Interactif</h1>
+  <p class="subtitle">Testez vos connaissances sur l'outil système Windows</p>
+</header>
+
+<!-- START SCREEN -->
+<div id="start-screen">
+  <div class="start-card">
+    <span class="start-icon">🖥️</span>
+    <h2 style="font-size:26px;font-weight:800;margin-bottom:12px;">Prêt pour le quiz ?</h2>
+    <p style="color:var(--lgray);font-size:15px;line-height:1.6;max-width:480px;margin:0 auto;">
+      Ce QCM couvre tous les aspects du Gestionnaire des Tâches Windows : 
+      onglets, raccourcis, processus, services, et bonnes pratiques.
+    </p>
+    <div class="info-grid">
+      <div class="info-box"><div class="val">30</div><div class="lbl">QUESTIONS</div></div>
+      <div class="info-box"><div class="val">4</div><div class="lbl">CHOIX / Q.</div></div>
+      <div class="info-box"><div class="val">7</div><div class="lbl">THÈMES</div></div>
+    </div>
+    <div class="topic-tags">
+      <span class="tag">Raccourcis</span>
+      <span class="tag">Processus</span>
+      <span class="tag">Performances</span>
+      <span class="tag">Démarrage</span>
+      <span class="tag">Services</span>
+      <span class="tag">Utilisateurs</span>
+      <span class="tag">Bonnes pratiques</span>
+    </div>
+    <button class="btn btn-primary" onclick="startQuiz()" style="padding:16px 40px;font-size:16px;">
+      Commencer le QCM →
+    </button>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quiz-screen" style="display:none;">
+  <div class="progress-wrap">
+    <div class="progress-header">
+      <span class="progress-label" id="progress-label">Question 1 / 30</span>
+      <span class="score-display" id="score-display">Score : 0 pts</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="dots-nav" id="dots-nav"></div>
+  </div>
+
+  <div class="card-container">
+    <div class="question-card" id="question-card">
+      <div class="q-meta">
+        <span class="q-number" id="q-number">Q.01</span>
+        <span class="q-category" id="q-category">GÉNÉRAL</span>
+      </div>
+      <div class="q-text" id="q-text"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback">
+        <span class="feedback-icon" id="fb-icon"></span>
+        <div class="feedback-text" id="fb-text"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="skipQuestion()" id="skip-btn">Passer</button>
+        <button class="btn btn-primary" onclick="nextQuestion()" id="next-btn" disabled>Suivant →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="results-screen">
+  <div class="results-card">
+    <span class="trophy" id="trophy-emoji">🏆</span>
+    <div class="score-big" id="final-score">0/30</div>
+    <div class="score-label" id="score-pct">0%</div>
+    <div class="result-grade" id="result-grade"></div>
+    <p class="result-message" id="result-message"></p>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-val" id="stat-correct" style="color:var(--green)">0</div>
+        <div class="stat-lbl">CORRECTES ✅</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-wrong" style="color:var(--red)">0</div>
+        <div class="stat-lbl">INCORRECTES ❌</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-skip" style="color:var(--orange)">0</div>
+        <div class="stat-lbl">PASSÉES ⏭️</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:40px;">
+      <button class="btn btn-primary" onclick="restartQuiz()">🔄 Recommencer</button>
+    </div>
+    <div class="review-section">
+      <div class="review-title">📋 Révision des réponses</div>
+      <div id="review-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    cat: "GÉNÉRAL",
+    q: "Quel est le raccourci clavier le plus direct pour ouvrir le Gestionnaire des tâches ?",
+    opts: ["Ctrl + Alt + Suppr", "Ctrl + Shift + Échap", "Win + R puis taskmgr", "Ctrl + F4"],
+    ans: 1,
+    exp: "Ctrl + Shift + Échap ouvre directement le Gestionnaire des tâches sans passer par un écran intermédiaire."
+  },
+  {
+    cat: "GÉNÉRAL",
+    q: "Combien d'onglets principaux contient le Gestionnaire des tâches sous Windows 10/11 ?",
+    opts: ["4 onglets", "5 onglets", "7 onglets", "6 onglets"],
+    ans: 2,
+    exp: "Le Gestionnaire des tâches comporte 7 onglets : Processus, Performances, Historique des applications, Démarrage, Utilisateurs, Détails, et Services."
+  },
+  {
+    cat: "GÉNÉRAL",
+    q: "Quelle commande permet d'ouvrir le Gestionnaire des tâches depuis la boîte Exécuter (Win+R) ?",
+    opts: ["taskmanager", "taskmgr", "taskmon", "perfmon"],
+    ans: 1,
+    exp: "La commande taskmgr.exe (ou taskmgr) lance directement le Gestionnaire des tâches depuis la boîte d'exécution."
+  },
+  {
+    cat: "GÉNÉRAL",
+    q: "Quelle combinaison de touches affiche l'écran de sécurité depuis lequel on peut accéder au Gestionnaire des tâches ?",
+    opts: ["Ctrl + Shift + F4", "Alt + F4", "Ctrl + Alt + Suppr", "Win + Pause"],
+    ans: 2,
+    exp: "Ctrl + Alt + Suppr affiche l'écran de sécurité Windows proposant plusieurs options dont le Gestionnaire des tâches."
+  },
+  {
+    cat: "PROCESSUS",
+    q: "Dans l'onglet Processus, que signifie l'état « Ne répond pas » pour une application ?",
+    opts: ["L'application s'est terminée normalement", "L'application est en pause volontaire", "L'application est bloquée et ne traite plus les événements", "L'application est en cours de mise à jour"],
+    ans: 2,
+    exp: "« Ne répond pas » indique que l'application est bloquée (gelée) et ne traite plus les messages Windows. Il faut souvent forcer sa fermeture."
+  },
+  {
+    cat: "PROCESSUS",
+    q: "Comment forcer la fermeture d'une application qui ne répond pas depuis le Gestionnaire des tâches ?",
+    opts: ["Double-cliquer sur le processus", "Clic droit → Fin de tâche", "Clic droit → Suspendre", "Appuyer sur la touche Suppr du clavier"],
+    ans: 1,
+    exp: "Clic droit sur le processus → « Fin de tâche » force l'arrêt immédiat du processus sélectionné."
+  },
+  {
+    cat: "PROCESSUS",
+    q: "L'onglet Processus regroupe les entrées en catégories. Laquelle n'existe PAS ?",
+    opts: ["Applications", "Processus en arrière-plan", "Processus Windows", "Processus réseau"],
+    ans: 3,
+    exp: "L'onglet Processus organise les processus en : Applications, Processus en arrière-plan, et Processus Windows. Il n'existe pas de catégorie « Processus réseau »."
+  },
+  {
+    cat: "PROCESSUS",
+    q: "Quelle colonne de l'onglet Processus indique la consommation de mémoire vive ?",
+    opts: ["CPU", "Mémoire", "RAM", "Charge"],
+    ans: 1,
+    exp: "La colonne « Mémoire » affiche la quantité de RAM consommée par chaque processus."
+  },
+  {
+    cat: "PROCESSUS",
+    q: "Que permet l'option « Ouvrir l'emplacement du fichier » dans le clic droit sur un processus ?",
+    opts: ["Déplacer l'exécutable", "Localiser l'exécutable sur le disque", "Afficher les propriétés réseau", "Modifier les autorisations du processus"],
+    ans: 1,
+    exp: "Cette option ouvre l'Explorateur de fichiers directement dans le dossier contenant l'exécutable du processus. Utile pour identifier un programme inconnu."
+  },
+  {
+    cat: "PERFORMANCES",
+    q: "Quelle ressource N'est PAS surveillée dans l'onglet Performances du Gestionnaire des tâches ?",
+    opts: ["CPU", "Mémoire RAM", "Température du processeur", "Réseau"],
+    ans: 2,
+    exp: "L'onglet Performances surveille CPU, Mémoire, Disque(s), Réseau et GPU. La température du processeur n'y est pas affichée (il faut des outils tiers ou le Moniteur de ressources)."
+  },
+  {
+    cat: "PERFORMANCES",
+    q: "Quelle action permet d'accéder au Moniteur de ressources depuis l'onglet Performances ?",
+    opts: ["Clic droit sur le graphique", "Cliquer sur « Ouvrir le moniteur de ressources »", "Appuyer sur F5", "Double-cliquer sur le panneau"],
+    ans: 1,
+    exp: "En bas de l'onglet Performances, un lien « Ouvrir le moniteur de ressources » permet d'accéder à des diagnostics encore plus détaillés."
+  },
+  {
+    cat: "PERFORMANCES",
+    q: "Dans l'onglet Performances, que représente « Fréquence » dans la section CPU ?",
+    opts: ["Le nombre de threads actifs", "La vitesse actuelle du processeur en GHz", "Le nombre de cœurs utilisés", "La tension d'alimentation du CPU"],
+    ans: 1,
+    exp: "La fréquence indique la vitesse actuelle du processeur en GHz, qui varie selon la charge grâce aux technologies d'overclocking automatique (Turbo Boost, etc.)."
+  },
+  {
+    cat: "PERFORMANCES",
+    q: "Quelle information NE figure PAS dans la section Mémoire de l'onglet Performances ?",
+    opts: ["Mémoire disponible", "Mémoire mise en cache", "Marque des barrettes RAM", "Vitesse de la RAM"],
+    ans: 2,
+    exp: "La section Mémoire affiche : disponible, mise en cache, dédiée, partagée, vitesse, emplacements utilisés. La marque des barrettes n'y est pas mentionnée."
+  },
+  {
+    cat: "DÉMARRAGE",
+    q: "Dans l'onglet Démarrage, que signifie « Impact de démarrage : Élevé » pour un programme ?",
+    opts: ["Le programme est prioritaire et doit rester actif", "Le programme ralentit significativement le démarrage de Windows", "Le programme consomme beaucoup de CPU en permanence", "Le programme nécessite des droits administrateur"],
+    ans: 1,
+    exp: "Un impact élevé signifie que ce programme allonge notablement le temps de démarrage de Windows. Il est recommandé de désactiver les programmes à impact élevé non essentiels."
+  },
+  {
+    cat: "DÉMARRAGE",
+    q: "Comment empêcher un programme de se lancer automatiquement au démarrage ?",
+    opts: ["Le supprimer de l'ordinateur", "Onglet Démarrage → Clic droit → Désactiver", "Modifier la base de registre manuellement", "Désactiver le service correspondant"],
+    ans: 1,
+    exp: "Dans l'onglet Démarrage, un clic droit sur le programme et « Désactiver » empêche son lancement automatique sans désinstaller le logiciel."
+  },
+  {
+    cat: "DÉMARRAGE",
+    q: "Quel onglet du Gestionnaire des tâches liste les programmes qui se lancent avec Windows ?",
+    opts: ["Processus", "Services", "Démarrage", "Détails"],
+    ans: 2,
+    exp: "L'onglet « Démarrage » liste spécifiquement tous les programmes configurés pour démarrer automatiquement avec Windows."
+  },
+  {
+    cat: "DÉMARRAGE",
+    q: "La colonne « Statut » dans l'onglet Démarrage peut afficher quelle valeur pour un programme désactivé ?",
+    opts: ["Suspendu", "Désactivé", "Arrêté", "Inactif"],
+    ans: 1,
+    exp: "La colonne Statut affiche « Activé » ou « Désactivé » pour indiquer si le programme est configuré pour démarrer avec Windows."
+  },
+  {
+    cat: "SERVICES",
+    q: "Un service Windows avec le statut « Arrêté » est-il en cours d'exécution ?",
+    opts: ["Oui, il fonctionne en mode veille", "Non, il n'est pas en cours d'exécution", "Oui, mais seulement en arrière-plan", "Cela dépend du type de service"],
+    ans: 1,
+    exp: "Un service « Arrêté » n'est pas en cours d'exécution. Il peut être démarré manuellement ou au prochain redémarrage selon sa configuration."
+  },
+  {
+    cat: "SERVICES",
+    q: "Que risque-t-on en désactivant un service système Windows critique ?",
+    opts: ["Rien, les services peuvent tous être désactivés en toute sécurité", "Une instabilité ou un dysfonctionnement grave du système", "Uniquement une perte de performances", "Un ralentissement temporaire du démarrage"],
+    ans: 1,
+    exp: "Désactiver un service système critique peut provoquer des dysfonctionnements graves, des pannes ou une instabilité de Windows. Il faut toujours vérifier avant de modifier un service."
+  },
+  {
+    cat: "SERVICES",
+    q: "Quel outil offre plus de contrôle sur les services que l'onglet Services du Gestionnaire des tâches ?",
+    opts: ["L'Explorateur de fichiers", "La console services.msc", "Le Panneau de configuration réseau", "L'éditeur de registre regedit"],
+    ans: 1,
+    exp: "La console services.msc (Gestionnaire de services) offre un contrôle complet : démarrage, arrêt, propriétés, type de démarrage, dépendances."
+  },
+  {
+    cat: "UTILISATEURS",
+    q: "Que permet l'onglet Utilisateurs du Gestionnaire des tâches ?",
+    opts: ["Créer de nouveaux comptes utilisateurs", "Voir et gérer les sessions actives et leur consommation de ressources", "Modifier les droits des utilisateurs", "Réinitialiser les mots de passe"],
+    ans: 1,
+    exp: "L'onglet Utilisateurs liste les sessions ouvertes et leur consommation CPU/Mémoire. Il permet aussi de déconnecter des sessions ou d'envoyer des messages."
+  },
+  {
+    cat: "UTILISATEURS",
+    q: "Quelle action n'est PAS disponible via un clic droit sur une session dans l'onglet Utilisateurs ?",
+    opts: ["Déconnecter l'utilisateur", "Envoyer un message", "Modifier le mot de passe", "Voir les processus de la session"],
+    ans: 2,
+    exp: "On peut déconnecter, envoyer un message, développer les processus... mais on ne peut pas modifier un mot de passe depuis cet onglet."
+  },
+  {
+    cat: "DÉTAILS",
+    q: "Que signifie l'acronyme PID dans l'onglet Détails ?",
+    opts: ["Process Identification Data", "Process IDentifier", "Primary Instance Descriptor", "Parallel Instance Driver"],
+    ans: 1,
+    exp: "PID (Process IDentifier) est un numéro unique attribué par Windows à chaque processus en cours d'exécution."
+  },
+  {
+    cat: "DÉTAILS",
+    q: "À quoi sert la colonne « Description » dans l'onglet Détails ?",
+    opts: ["Afficher le chemin complet de l'exécutable", "Donner un nom lisible pour identifier facilement le processus", "Indiquer la priorité du processus", "Lister les DLL chargées par le processus"],
+    ans: 1,
+    exp: "La colonne Description donne une description lisible du processus, aidant à identifier des exécutables au nom peu explicite (ex: svchost.exe → Service hôte)."
+  },
+  {
+    cat: "DÉTAILS",
+    q: "Comment peut-on modifier la priorité d'un processus dans l'onglet Détails ?",
+    opts: ["Double-cliquer sur le processus", "Clic droit → Définir la priorité", "Glisser-déposer le processus dans une zone de priorité", "Modifier directement la colonne Priorité"],
+    ans: 1,
+    exp: "Clic droit sur un processus dans l'onglet Détails → « Définir la priorité » permet de modifier la priorité (Temps réel, Élevée, Supérieure à la normale, Normale, etc.)."
+  },
+  {
+    cat: "BONNES PRATIQUES",
+    q: "Un processus inconnu utilise 90% du CPU en permanence. Quelle est la première chose à faire ?",
+    opts: ["Le terminer immédiatement sans vérification", "Identifier le processus via clic droit → Ouvrir l'emplacement du fichier", "Redémarrer l'ordinateur directement", "Désactiver l'antivirus pour réduire la charge"],
+    ans: 1,
+    exp: "Avant d'agir, il faut identifier le processus en cherchant son emplacement sur le disque ou en le recherchant sur Internet pour savoir si c'est légitime ou un malware."
+  },
+  {
+    cat: "BONNES PRATIQUES",
+    q: "Quelle est la meilleure pratique pour optimiser le temps de démarrage de Windows ?",
+    opts: ["Supprimer tous les fichiers temporaires", "Désactiver les programmes à impact élevé dans l'onglet Démarrage", "Augmenter la taille du fichier d'échange", "Désactiver Windows Defender"],
+    ans: 1,
+    exp: "Désactiver les programmes non essentiels à impact élevé dans l'onglet Démarrage est la méthode la plus sûre et efficace pour accélérer le démarrage."
+  },
+  {
+    cat: "BONNES PRATIQUES",
+    q: "Que se passe-t-il si on termine le processus « explorer.exe » ?",
+    opts: ["Windows redémarre automatiquement", "Le bureau, la barre des tâches et l'Explorateur disparaissent", "L'ordinateur s'éteint", "Seul l'Explorateur de fichiers se ferme"],
+    ans: 1,
+    exp: "explorer.exe gère le bureau, la barre des tâches et l'Explorateur de fichiers. Le terminer fait disparaître l'interface graphique. Il peut être relancé via Fichier → Exécuter une nouvelle tâche dans le Gestionnaire."
+  },
+  {
+    cat: "BONNES PRATIQUES",
+    q: "Combien de fois peut-on trouver le processus « svchost.exe » dans l'onglet Processus/Détails ?",
+    opts: ["Une seule fois, c'est un processus unique", "Exactement 2 fois", "Plusieurs fois (souvent 10 à 20 instances ou plus)", "3 fois maximum"],
+    ans: 2,
+    exp: "svchost.exe (Service Host) est un hôte générique pour les services Windows. Il existe de nombreuses instances car Windows regroupe différents services dans des processus svchost séparés."
+  },
+  {
+    cat: "HISTORIQUE",
+    q: "Quelle information principale affiche l'onglet « Historique des applications » ?",
+    opts: ["La liste des derniers fichiers ouverts par application", "La consommation de ressources cumulée des applications depuis le dernier démarrage", "Les applications installées sur le système", "Le journal d'erreurs des applications"],
+    ans: 1,
+    exp: "L'onglet Historique des applications affiche la consommation cumulée (CPU, réseau, etc.) des applications Windows Store depuis la dernière réinitialisation."
+  },
+  {
+    cat: "HISTORIQUE",
+    q: "L'onglet « Historique des applications » affiche principalement les données de quel type d'applications ?",
+    opts: ["Toutes les applications Win32 (bureau classique)", "Les applications du Windows Store (applications universelles)", "Les services Windows uniquement", "Les applications de démarrage uniquement"],
+    ans: 1,
+    exp: "L'onglet Historique des applications est principalement conçu pour les applications Windows Store (UWP). Les applications Win32 classiques y apparaissent plus rarement ou partiellement."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = 0;
+let skipped = 0;
+let results = [];
+let answered_flags = new Array(30).fill(false);
+let correct_flags = new Array(30).fill(false);
+
+function startQuiz() {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  buildDots();
+  renderQuestion();
+}
+
+function buildDots() {
+  const nav = document.getElementById('dots-nav');
+  nav.innerHTML = questions.map((_, i) =>
+    `<div class="dot" id="dot-${i}" title="Q.${i+1}"></div>`
+  ).join('');
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  const letters = ['A', 'B', 'C', 'D'];
+
+  document.getElementById('progress-label').textContent = `Question ${current+1} / ${questions.length}`;
+  document.getElementById('score-display').textContent = `Score : ${score} pts`;
+  document.getElementById('progress-fill').style.width = `${(current/questions.length)*100}%`;
+  document.getElementById('q-number').textContent = `Q.${String(current+1).padStart(2,'0')}`;
+  document.getElementById('q-category').textContent = q.cat;
+  document.getElementById('q-text').textContent = q.q;
+
+  // Update current dot
+  document.querySelectorAll('.dot').forEach((d,i) => {
+    d.classList.remove('current');
+    if (i === current) d.classList.add('current');
+  });
+
+  const optDiv = document.getElementById('options');
+  optDiv.innerHTML = q.opts.map((opt, i) => `
+    <button class="option-btn" onclick="selectOption(${i})" id="opt-${i}">
+      <span class="option-letter">${letters[i]}</span>
+      <span class="option-text">${opt}</span>
+    </button>
+  `).join('');
+
+  // Reset feedback
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  fb.style.display = 'none';
+
+  document.getElementById('next-btn').disabled = true;
+  document.getElementById('skip-btn').disabled = false;
+
+  // Re-animate card
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'slideIn 0.4s cubic-bezier(0.4,0,0.2,1)';
+}
+
+function selectOption(idx) {
+  if (answered_flags[current]) return;
+  answered_flags[current] = true;
+  answered++;
+
+  const q = questions[current];
+  const isCorrect = idx === q.ans;
+  const letters = ['A', 'B', 'C', 'D'];
+
+  if (isCorrect) {
+    score++;
+    correct_flags[current] = true;
+    document.getElementById(`opt-${idx}`).classList.add('correct-answer');
+    document.getElementById(`dot-${current}`).classList.add('correct');
+    showFeedback(true, `Bonne réponse ! ${q.exp}`);
+  } else {
+    document.getElementById(`opt-${idx}`).classList.add('wrong-answer');
+    document.getElementById(`opt-${q.ans}`).classList.add('reveal-correct');
+    document.getElementById(`dot-${current}`).classList.add('wrong');
+    showFeedback(false, `Incorrect. La bonne réponse était <strong>${letters[q.ans]}. ${q.opts[q.ans]}</strong>. ${q.exp}`);
+  }
+
+  // Disable all
+  document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+  document.getElementById('skip-btn').disabled = true;
+  document.getElementById('next-btn').disabled = false;
+
+  results.push({ q: q.q, correct: isCorrect, userAns: q.opts[idx], rightAns: q.opts[q.ans] });
+  document.getElementById('score-display').textContent = `Score : ${score} pts`;
+}
+
+function showFeedback(correct, msg) {
+  const fb = document.getElementById('feedback');
+  document.getElementById('fb-icon').textContent = correct ? '✅' : '❌';
+  document.getElementById('fb-text').innerHTML = msg;
+  fb.className = `feedback show ${correct ? 'correct-fb' : 'wrong-fb'}`;
+  fb.style.display = 'flex';
+}
+
+function skipQuestion() {
+  if (answered_flags[current]) return;
+  answered_flags[current] = true;
+  skipped++;
+
+  const q = questions[current];
+  document.getElementById(`opt-${q.ans}`).classList.add('reveal-correct');
+  document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+  document.getElementById('skip-btn').disabled = true;
+  document.getElementById('next-btn').disabled = false;
+  document.getElementById(`dot-${current}`).classList.add('wrong');
+
+  showFeedback(false, `Question passée. La bonne réponse était : <strong>${questions[current].opts[q.ans]}</strong>. ${q.exp}`);
+  results.push({ q: q.q, correct: false, userAns: '—', rightAns: q.opts[q.ans] });
+}
+
+function nextQuestion() {
+  if (current < questions.length - 1) {
+    current++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  const rs = document.getElementById('results-screen');
+  rs.style.display = 'block';
+  rs.scrollIntoView({ behavior: 'smooth' });
+
+  const pct = Math.round((score / questions.length) * 100);
+  const wrong = answered - skipped - score;
+
+  document.getElementById('final-score').textContent = `${score}/30`;
+  document.getElementById('score-pct').textContent = `${pct}% de réussite`;
+  document.getElementById('stat-correct').textContent = score;
+  document.getElementById('stat-wrong').textContent = wrong;
+  document.getElementById('stat-skip').textContent = skipped;
+
+  let emoji, grade, msg;
+  if (pct >= 90) { emoji='🏆'; grade='Excellent !'; msg='Maîtrise parfaite du Gestionnaire des tâches. Vous êtes un expert Windows !'; }
+  else if (pct >= 75) { emoji='🥇'; grade='Très bien !'; msg='Très bonne connaissance du Gestionnaire des tâches. Encore un petit effort pour la perfection !'; }
+  else if (pct >= 60) { emoji='🥈'; grade='Bien'; msg='Bonne base. Revoyez les onglets Services et Détails pour progresser.'; }
+  else if (pct >= 40) { emoji='🥉'; grade='Passable'; msg='Des lacunes à combler. Relisez le cours sur les processus, le démarrage et les services.'; }
+  else { emoji='📚'; grade='À revoir'; msg='Beaucoup de points à retravailler. Parcourez la présentation complète et retentez le quiz !'; }
+
+  document.getElementById('trophy-emoji').textContent = emoji;
+  document.getElementById('result-grade').textContent = grade;
+  document.getElementById('result-grade').style.color = pct >= 75 ? 'var(--yellow)' : pct >= 50 ? 'var(--orange)' : 'var(--red)';
+  document.getElementById('result-message').textContent = msg;
+
+  const list = document.getElementById('review-list');
+  list.innerHTML = results.map((r, i) => `
+    <div class="review-item ${r.correct ? 'r-correct' : 'r-wrong'}">
+      <div class="review-q">${i+1}. ${r.q}</div>
+      <div class="review-answer">
+        ${r.correct ? '✅ Bonne réponse' : `❌ Votre réponse : ${r.userAns} → Bonne réponse : ${r.rightAns}`}
+      </div>
+    </div>
+  `).join('');
+}
+
+function restartQuiz() {
+  current = 0; score = 0; answered = 0; skipped = 0;
+  results = [];
+  answered_flags = new Array(30).fill(false);
+  correct_flags = new Array(30).fill(false);
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  window.scrollTo(0,0);
+  buildDots();
+  renderQuestion();
+}
+</script>
+</body>
+</html>
