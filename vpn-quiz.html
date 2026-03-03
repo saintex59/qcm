@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QCM VPN — 30 Questions</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d14;
+    --surface: #111520;
+    --card: #161c2d;
+    --border: #1e2a45;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #a8ff3e;
+    --text: #e8eaf6;
+    --muted: #5a6a8a;
+    --success: #a8ff3e;
+    --error: #ff4d6d;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow blobs */
+  body::after {
+    content: '';
+    position: fixed;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 70%);
+    top: -200px; right: -200px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 5px 14px;
+    border-radius: 2px;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin-bottom: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 3px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .progress-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    white-space: nowrap;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .score-live {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Question card */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 20px;
+    animation: fadeSlide 0.35s ease both;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .q-text {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 28px;
+    color: var(--text);
+  }
+
+  /* Options */
+  .options {
+    display: grid;
+    gap: 10px;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    font-size: 14px;
+    font-weight: 400;
+    text-align: left;
+    color: var(--text);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .option::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+
+  .option:hover:not(.disabled) {
+    border-color: var(--accent);
+    transform: translateX(4px);
+  }
+
+  .option:hover:not(.disabled)::before { opacity: 0.04; }
+
+  .opt-letter {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.2);
+    width: 26px; height: 26px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.18s ease;
+    position: relative;
+    z-index: 1;
+  }
+
+  .opt-text { position: relative; z-index: 1; line-height: 1.4; }
+
+  /* States */
+  .option.correct {
+    border-color: var(--success);
+    background: rgba(168,255,62,0.08);
+    animation: pulse-green 0.4s ease;
+  }
+  .option.correct .opt-letter {
+    background: var(--success);
+    color: #000;
+    border-color: var(--success);
+  }
+
+  .option.wrong {
+    border-color: var(--error);
+    background: rgba(255,77,109,0.08);
+    animation: pulse-red 0.4s ease;
+  }
+  .option.wrong .opt-letter {
+    background: var(--error);
+    color: #fff;
+    border-color: var(--error);
+  }
+
+  .option.show-correct {
+    border-color: var(--success);
+    background: rgba(168,255,62,0.05);
+  }
+  .option.show-correct .opt-letter {
+    background: rgba(168,255,62,0.2);
+    color: var(--success);
+    border-color: var(--success);
+  }
+
+  .option.disabled { cursor: default; transform: none !important; }
+
+  @keyframes pulse-green {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 20px rgba(168,255,62,0.3); }
+  }
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 20px rgba(255,77,109,0.3); }
+  }
+
+  /* Feedback */
+  .feedback {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    line-height: 1.6;
+    display: none;
+    animation: fadeSlide 0.25s ease;
+  }
+  .feedback.correct-fb {
+    background: rgba(168,255,62,0.08);
+    border: 1px solid rgba(168,255,62,0.25);
+    color: var(--success);
+    display: block;
+  }
+  .feedback.wrong-fb {
+    background: rgba(255,77,109,0.08);
+    border: 1px solid rgba(255,77,109,0.25);
+    color: var(--error);
+    display: block;
+  }
+
+  /* Nav buttons */
+  .nav {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 28px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #33eaff; transform: translateY(-1px); }
+  .btn-primary:disabled {
+    background: var(--border);
+    color: var(--muted);
+    cursor: default;
+    transform: none;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Results screen */
+  .results {
+    display: none;
+    animation: fadeSlide 0.4s ease;
+  }
+  .results.visible { display: block; }
+
+  .results-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 48px 40px;
+    text-align: center;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .results-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3), var(--accent2));
+  }
+
+  .score-big {
+    font-size: clamp(4rem, 12vw, 6rem);
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .score-fraction {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .score-msg {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .score-sub {
+    font-size: 14px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 32px;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 12px;
+  }
+
+  .stat-val {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .stat-val.green { color: var(--success); }
+  .stat-val.red { color: var(--error); }
+  .stat-val.blue { color: var(--accent); }
+
+  .stat-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* Review section */
+  .review-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .review-toggle:hover { border-color: var(--accent); }
+  .review-toggle .arrow { transition: transform 0.2s ease; font-size: 12px; color: var(--muted); }
+  .review-toggle.open .arrow { transform: rotate(180deg); }
+
+  .review-list { display: none; }
+  .review-list.open { display: grid; gap: 10px; margin-bottom: 24px; animation: fadeSlide 0.3s ease; }
+
+  .review-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-size: 13px;
+  }
+  .review-item.r-correct { border-left: 3px solid var(--success); }
+  .review-item.r-wrong { border-left: 3px solid var(--error); }
+
+  .review-q {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .review-ans {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .review-ans .given { color: var(--error); }
+  .review-ans .given.ok { color: var(--success); }
+  .review-ans .correct-a { color: var(--success); }
+
+  /* Quiz area toggle */
+  .quiz-area { display: block; }
+  .quiz-area.hidden { display: none; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="badge">// Sécurité Réseau</div>
+    <h1>QCM <span>VPN</span></h1>
+    <p class="subtitle">30 questions · Testez vos connaissances</p>
+  </header>
+
+  <div class="quiz-area" id="quizArea">
+    <div class="progress-wrap">
+      <span class="score-live" id="scoreLive">Score: 0</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <span class="progress-label" id="progressLabel">0 / 30</span>
+    </div>
+
+    <div class="question-card" id="questionCard">
+      <div class="q-number" id="qNumber">Question 01</div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-primary" id="nextBtn" disabled>Suivant →</button>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="results-card">
+      <div class="score-big" id="scoreBig"></div>
+      <div class="score-fraction" id="scoreFrac"></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <div class="score-sub" id="scoreSub"></div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-val green" id="statCorrect">0</div>
+          <div class="stat-lbl">Correctes</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val red" id="statWrong">0</div>
+          <div class="stat-lbl">Fausses</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val blue" id="statPct">0%</div>
+          <div class="stat-lbl">Réussite</div>
+        </div>
+      </div>
+    </div>
+    <div class="review-toggle" id="reviewToggle">
+      <span>📋 Revoir toutes les réponses</span>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="review-list" id="reviewList"></div>
+    <div style="text-align:center">
+      <button class="btn btn-primary" onclick="restartQuiz()">↺ Recommencer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Que signifie l'acronyme VPN ?",
+    opts: ["Virtual Private Network","Virtual Protected Node","Verified Public Network","Virtual Proxy Node"],
+    ans: 0,
+    exp: "VPN = Virtual Private Network (Réseau Privé Virtuel)."
+  },
+  {
+    q: "Quel est le principal objectif d'un VPN ?",
+    opts: ["Augmenter la vitesse de connexion","Créer un tunnel sécurisé et chiffré sur Internet","Bloquer les publicités en ligne","Compresser les données pour économiser la bande passante"],
+    ans: 1,
+    exp: "Un VPN crée un tunnel chiffré entre l'utilisateur et le serveur, protégeant les données en transit."
+  },
+  {
+    q: "Quel protocole VPN est réputé le plus sécurisé et moderne ?",
+    opts: ["PPTP","L2TP/IPSec","OpenVPN","WireGuard"],
+    ans: 3,
+    exp: "WireGuard est le protocole le plus récent, avec une cryptographie moderne (ChaCha20, Poly1305) et un code très compact."
+  },
+  {
+    q: "Le protocole PPTP est considéré comme :",
+    opts: ["Très sécurisé et recommandé","Obsolète et vulnérable","Le plus rapide de tous","Incompatible avec Windows"],
+    ans: 1,
+    exp: "PPTP utilise MS-CHAPv2, qui a été compromis. Il est déconseillé pour tout usage sérieux."
+  },
+  {
+    q: "Sur quel port fonctionne OpenVPN par défaut (UDP) ?",
+    opts: ["443","1194","8080","500"],
+    ans: 1,
+    exp: "OpenVPN utilise par défaut le port UDP 1194, bien qu'il puisse aussi opérer sur TCP 443."
+  },
+  {
+    q: "Qu'est-ce qu'un « kill switch » dans un VPN ?",
+    opts: ["Un bouton pour éteindre le VPN","Un mécanisme coupant Internet si le VPN se déconnecte","Une fonctionnalité de compression","Un protocole de reconnexion automatique"],
+    ans: 1,
+    exp: "Le kill switch coupe l'accès Internet si le tunnel VPN tombe, évitant toute fuite de trafic non chiffré."
+  },
+  {
+    q: "Quelle technologie utilise IPSec pour authentifier et chiffrer les paquets IP ?",
+    opts: ["SSL/TLS","AH et ESP","RSA seul","MD5 seul"],
+    ans: 1,
+    exp: "IPSec utilise deux protocoles : AH (Authentication Header) pour l'intégrité et ESP (Encapsulating Security Payload) pour le chiffrement."
+  },
+  {
+    q: "Qu'est-ce qu'un VPN split tunneling ?",
+    opts: ["Un VPN avec deux serveurs en parallèle","Seul une partie du trafic passe par le VPN","Un VPN qui divise la bande passante","Un VPN chiffré avec deux algorithmes"],
+    ans: 1,
+    exp: "Le split tunneling permet d'envoyer certains flux par le VPN et d'autres directement sur Internet."
+  },
+  {
+    q: "Quel algorithme de chiffrement symétrique est le plus utilisé dans les VPN modernes ?",
+    opts: ["DES","3DES","AES-256","RC4"],
+    ans: 2,
+    exp: "AES-256 est le standard industriel pour le chiffrement symétrique, offrant 256 bits de clé."
+  },
+  {
+    q: "Qu'est-ce qu'une « DNS leak » dans le contexte VPN ?",
+    opts: ["Un bug qui expose l'adresse IP réelle via les requêtes DNS","Une attaque sur le serveur DNS","Un protocole de résolution de noms","Une fuite de bande passante"],
+    ans: 0,
+    exp: "Une DNS leak se produit quand les requêtes DNS contournent le tunnel VPN, révélant l'activité de navigation."
+  },
+  {
+    q: "Quel protocole VPN est intégré nativement dans la plupart des OS modernes sans logiciel tiers ?",
+    opts: ["OpenVPN","PPTP","IKEv2/IPSec","WireGuard"],
+    ans: 2,
+    exp: "IKEv2/IPSec est supporté nativement par Windows, macOS, iOS et Android sans installation supplémentaire."
+  },
+  {
+    q: "Qu'est-ce qu'un VPN no-log (no-log policy) ?",
+    opts: ["Un VPN sans interface de connexion","Un fournisseur qui ne conserve aucun journal d'activité","Un VPN sans authentification","Un VPN qui ne chiffre pas les logs"],
+    ans: 1,
+    exp: "Une politique no-log signifie que le fournisseur ne stocke pas les données de connexion ni l'activité des utilisateurs."
+  },
+  {
+    q: "Qu'est-ce qu'un VPN site-à-site ?",
+    opts: ["Un VPN entre un utilisateur nomade et un serveur","Une connexion permanente entre deux réseaux d'entreprise","Un VPN basé sur un navigateur web","Un VPN utilisant deux protocoles simultanément"],
+    ans: 1,
+    exp: "Un VPN site-à-site relie deux réseaux locaux (par ex. deux bureaux d'entreprise) de manière permanente."
+  },
+  {
+    q: "Lequel de ces services n'est PAS fourni par un VPN ?",
+    opts: ["Chiffrement du trafic","Masquage de l'adresse IP","Protection contre les malwares (par défaut)","Contournement de la censure géographique"],
+    ans: 2,
+    exp: "Un VPN standard ne protège pas contre les malwares ; cette fonction relève des antivirus et pare-feux."
+  },
+  {
+    q: "Quel port utilise le protocole HTTPS (souvent utilisé par les VPN pour passer les pare-feux) ?",
+    opts: ["80","8080","443","21"],
+    ans: 2,
+    exp: "Le port 443 est associé à HTTPS. Certains VPN comme OpenVPN TCP l'utilisent pour contourner les restrictions."
+  },
+  {
+    q: "Qu'est-ce que Perfect Forward Secrecy (PFS) dans un VPN ?",
+    opts: ["Une clé de chiffrement permanente","Des clés de session générées aléatoirement et indépendantes","Un protocole de reconnexion","Un système d'authentification à deux facteurs"],
+    ans: 1,
+    exp: "PFS génère des clés de session éphémères ; même si la clé privée est compromise, les sessions passées restent sécurisées."
+  },
+  {
+    q: "Quel est l'avantage principal de WireGuard sur OpenVPN ?",
+    opts: ["Meilleure compatibilité avec les vieux OS","Code plus léger, plus rapide et plus sécurisé","Support de davantage de systèmes d'authentification","Plus grande ancienneté et maturité"],
+    ans: 1,
+    exp: "WireGuard a ~4 000 lignes de code contre ~400 000 pour OpenVPN, le rendant plus facile à auditer et plus performant."
+  },
+  {
+    q: "Qu'est-ce qu'un obfsproxy dans le contexte VPN ?",
+    opts: ["Un serveur proxy inversé","Un outil obfusquant le trafic VPN pour contourner la censure","Un protocole d'authentification","Un compresseur de paquets"],
+    ans: 1,
+    exp: "obfsproxy (développé par Tor) camouffle le trafic VPN pour le faire ressembler à du trafic normal, contournant les DPI."
+  },
+  {
+    q: "Dans IPSec, que signifie « tunnel mode » par opposition à « transport mode » ?",
+    opts: ["Le tunnel mode chiffre uniquement le payload ; transport mode chiffre tout le paquet","Le tunnel mode encapsule tout le paquet IP dans un nouveau paquet ; transport mode ne chiffre que le payload","Les deux modes sont identiques","Tunnel mode est plus lent mais plus sécurisé"],
+    ans: 1,
+    exp: "En tunnel mode, l'intégralité du paquet IP est encapsulée dans un nouveau paquet IPSec — utilisé pour les VPN site-à-site."
+  },
+  {
+    q: "Quel protocole est utilisé par L2TP pour le chiffrement ?",
+    opts: ["L2TP chiffre seul les données","IPSec","SSL","AES natif"],
+    ans: 1,
+    exp: "L2TP (Layer 2 Tunneling Protocol) ne chiffre pas par lui-même ; il est couplé à IPSec pour la sécurité."
+  },
+  {
+    q: "Qu'est-ce qu'un VPN double (Double VPN ou Multi-hop) ?",
+    opts: ["Un VPN avec deux algorithmes de chiffrement","Le trafic passe par deux serveurs VPN successifs","Un VPN qui connecte deux appareils simultanément","Un protocole utilisant deux ports"],
+    ans: 1,
+    exp: "Le Multi-hop (ou Double VPN) fait passer le trafic par deux serveurs VPN différents, ajoutant une couche d'anonymat."
+  },
+  {
+    q: "Qu'est-ce qu'une « IP leak » ?",
+    opts: ["Une fuite d'adresse IP réelle malgré l'utilisation du VPN","Un bug d'allocation d'adresse IP","Une attaque DDoS sur le VPN","Une erreur de configuration du routeur"],
+    ans: 0,
+    exp: "Une IP leak révèle l'adresse IP réelle de l'utilisateur au lieu de celle du serveur VPN, compromettant l'anonymat."
+  },
+  {
+    q: "Quel algorithme d'échange de clés est le plus utilisé dans les VPN modernes ?",
+    opts: ["RSA-1024","Diffie-Hellman / ECDH","MD5","SHA-1"],
+    ans: 1,
+    exp: "Diffie-Hellman (et sa variante sur courbes elliptiques ECDH) permet d'échanger des clés de manière sécurisée sans les transmettre."
+  },
+  {
+    q: "Dans quel cas un VPN ne peut PAS protéger vos données ?",
+    opts: ["Sur un réseau Wi-Fi public","Si le site destination utilise HTTPS","Si vous vous êtes connecté à un site avec vos identifiants (compte Google, Facebook…)","Depuis un réseau mobile 4G"],
+    ans: 2,
+    exp: "Un VPN masque l'IP mais pas l'identité de connexion. Si vous vous connectez avec un compte, le site sait qui vous êtes."
+  },
+  {
+    q: "Quel est le rôle du protocole IKE (Internet Key Exchange) ?",
+    opts: ["Chiffrer les données utilisateur","Établir et gérer les associations de sécurité IPSec","Compresser les paquets réseau","Résoudre les adresses IP en noms de domaine"],
+    ans: 1,
+    exp: "IKE négocie et établit les Security Associations (SA) nécessaires à IPSec, gérant l'échange de clés et l'authentification."
+  },
+  {
+    q: "Quel est l'inconvénient majeur des VPN gratuits ?",
+    opts: ["Ils sont toujours plus lents","Ils ne fonctionnent que sur PC","Ils peuvent monétiser les données des utilisateurs et offrir une sécurité moindre","Ils n'utilisent jamais le chiffrement"],
+    ans: 2,
+    exp: "Plusieurs études ont montré que des VPN gratuits revendent les données de navigation ou contiennent des malwares."
+  },
+  {
+    q: "Qu'est-ce que le protocole SSTP (Secure Socket Tunneling Protocol) ?",
+    opts: ["Un protocole open-source développé par la communauté","Un protocole VPN propriétaire Microsoft utilisant SSL/TLS","Un protocole uniquement pour Linux","Un protocole de compression réseau"],
+    ans: 1,
+    exp: "SSTP est un protocole Microsoft qui utilise SSL 3.0/TLS pour encapsuler le trafic PPP, bien intégré à Windows."
+  },
+  {
+    q: "Quel outil peut être utilisé pour vérifier une fuite DNS ?",
+    opts: ["ping","traceroute","dnsleaktest.com","nmap"],
+    ans: 2,
+    exp: "Des sites comme dnsleaktest.com ou ipleak.net permettent de vérifier si vos requêtes DNS passent bien par le tunnel VPN."
+  },
+  {
+    q: "Dans le modèle OSI, à quelle couche opère principalement un VPN SSL/TLS (comme OpenVPN) ?",
+    opts: ["Couche 2 (Liaison)","Couche 3 (Réseau)","Couche 4-5 (Transport/Session)","Couche 7 (Application)"],
+    ans: 2,
+    exp: "OpenVPN et les VPN SSL/TLS opèrent au niveau des couches Transport/Session (4-5) du modèle OSI."
+  },
+  {
+    q: "Qu'est-ce que le « Tor over VPN » ?",
+    opts: ["Utiliser Tor à la place d'un VPN","Connecter d'abord un VPN puis accéder au réseau Tor","Utiliser Tor comme serveur VPN","Bloquer Tor grâce au VPN"],
+    ans: 1,
+    exp: "Tor over VPN = connecter son VPN d'abord, puis utiliser Tor. Le fournisseur VPN voit la connexion au réseau Tor mais pas le contenu."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let userAnswers = [];
+
+function render() {
+  const q = questions[current];
+  document.getElementById('qNumber').textContent = `Question ${String(current + 1).padStart(2, '0')}`;
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('progressFill').style.width = `${(current / questions.length) * 100}%`;
+  document.getElementById('progressLabel').textContent = `${current} / ${questions.length}`;
+  document.getElementById('scoreLive').textContent = `Score: ${score}`;
+
+  const container = document.getElementById('options');
+  container.innerHTML = '';
+  const letters = ['A','B','C','D'];
+
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span class="opt-text">${opt}</span>`;
+    btn.onclick = () => selectAnswer(i);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('nextBtn').disabled = true;
+  answered = false;
+
+  // Re-animate card
+  const card = document.getElementById('questionCard');
+  card.style.animation = 'none';
+  requestAnimationFrame(() => { card.style.animation = ''; });
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const opts = document.querySelectorAll('.option');
+  const fb = document.getElementById('feedback');
+  const isCorrect = idx === q.ans;
+
+  userAnswers[current] = idx;
+
+  opts.forEach(o => o.classList.add('disabled'));
+  opts[idx].classList.add(isCorrect ? 'correct' : 'wrong');
+
+  if (!isCorrect) {
+    opts[q.ans].classList.add('show-correct');
+    fb.textContent = `✗ Incorrect. ${q.exp}`;
+    fb.className = 'feedback wrong-fb';
+  } else {
+    score++;
+    fb.textContent = `✓ Correct ! ${q.exp}`;
+    fb.className = 'feedback correct-fb';
+  }
+
+  document.getElementById('scoreLive').textContent = `Score: ${score}`;
+  document.getElementById('nextBtn').disabled = false;
+  document.getElementById('nextBtn').textContent = current < questions.length - 1 ? 'Suivant →' : 'Voir les résultats →';
+}
+
+document.getElementById('nextBtn').onclick = () => {
+  if (current < questions.length - 1) {
+    current++;
+    render();
+  } else {
+    showResults();
+  }
+};
+
+function showResults() {
+  document.getElementById('quizArea').classList.add('hidden');
+  const results = document.getElementById('results');
+  results.classList.add('visible');
+
+  const pct = Math.round((score / questions.length) * 100);
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressLabel').textContent = `${questions.length} / ${questions.length}`;
+
+  document.getElementById('scoreBig').textContent = `${pct}%`;
+  document.getElementById('scoreBig').style.color = pct >= 70 ? 'var(--success)' : pct >= 40 ? 'var(--accent)' : 'var(--error)';
+  document.getElementById('scoreFrac').textContent = `${score} bonnes réponses sur ${questions.length}`;
+
+  let msg, sub;
+  if (pct >= 90) { msg = "🏆 Expert VPN !"; sub = "Impressionnant — vous maîtrisez le sujet."; }
+  else if (pct >= 70) { msg = "👍 Très bon niveau"; sub = "Quelques lacunes à combler, mais solide."; }
+  else if (pct >= 50) { msg = "📚 Niveau intermédiaire"; sub = "Continuez à approfondir vos connaissances."; }
+  else { msg = "🔰 Débutant"; sub = "Recommencez pour progresser !"; }
+
+  document.getElementById('scoreMsg').textContent = msg;
+  document.getElementById('scoreSub').textContent = sub;
+  document.getElementById('statCorrect').textContent = score;
+  document.getElementById('statWrong').textContent = questions.length - score;
+  document.getElementById('statPct').textContent = pct + '%';
+
+  // Build review
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  questions.forEach((q, i) => {
+    const ua = userAnswers[i];
+    const ok = ua === q.ans;
+    const div = document.createElement('div');
+    div.className = `review-item ${ok ? 'r-correct' : 'r-wrong'}`;
+    div.innerHTML = `
+      <div class="review-q">${String(i+1).padStart(2,'0')}. ${q.q}</div>
+      <div class="review-ans">
+        ${ok
+          ? `<span class="given ok">✓ ${letters[ua]}. ${q.opts[ua]}</span>`
+          : `<span class="given">✗ Votre réponse : ${letters[ua] !== undefined ? letters[ua]+'. '+q.opts[ua] : '—'}</span> &nbsp;|&nbsp; <span class="correct-a">✓ ${letters[q.ans]}. ${q.opts[q.ans]}</span>`
+        }
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+document.getElementById('reviewToggle').onclick = function() {
+  this.classList.toggle('open');
+  document.getElementById('reviewList').classList.toggle('open');
+};
+
+function restartQuiz() {
+  current = 0; score = 0; answered = false; userAnswers = [];
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('quizArea').classList.remove('hidden');
+  document.getElementById('progressFill').style.width = '0%';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
